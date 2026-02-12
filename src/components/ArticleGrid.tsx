@@ -44,9 +44,9 @@ export default function ArticleGrid({ articles }: ArticleGridProps) {
             <Link href={`/${article.slug}/`} className="m-article-card__picture-link" aria-hidden="true" tabIndex={-1}></Link>
             <Image 
               className="m-article-card__picture-background" 
-              src={article.feature_image} 
-              loading="lazy" 
-              alt=""
+              src={article.feature_image}
+              loading="lazy"
+              alt={article.title}
               width={600}
               height={400}
             />

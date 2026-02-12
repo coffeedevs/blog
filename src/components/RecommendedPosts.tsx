@@ -48,7 +48,7 @@ export default async function RecommendedPosts({ currentSlug }: RecommendedPosts
                       className="m-article-card__picture-background"
                       src={transformImagePath(post.featureImage || '/content/images/2018/06/background.jpg', 1000)}
                       loading="lazy"
-                      alt=""
+                      alt={post.title}
                       width={600}
                       height={400}
                     />
