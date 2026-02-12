@@ -110,18 +110,26 @@ function calculateReadingTime(content: string): number {
   return readingTime;
 }
 
-export async function getAllPosts(): Promise<PostMeta[]> {
+export async function getAllPosts(options?: { query?: string }): Promise<PostMeta[]> {
   const postsDirectory = path.join(process.cwd(), "content", "posts");
+  const normalizedQuery = options?.query?.trim().toLowerCase();
 
   try {
     const filenames = await fs.readdir(postsDirectory);
     const posts = await Promise.all(
       filenames
         .filter(name => name.endsWith('.mdx'))
-        .map(async (name) => {
+        .map(async (name): Promise<PostMeta | null> => {
           const filePath = path.join(postsDirectory, name);
           const fileContent = await fs.readFile(filePath, "utf-8");
           const { data, content } = matter(fileContent);
+
+          if (normalizedQuery) {
+            const searchableText = `${data.title || ""} ${content}`.toLowerCase();
+            if (!searchableText.includes(normalizedQuery)) {
+              return null;
+            }
+          }
 
           return {
             title: data.title || "",
@@ -136,8 +144,10 @@ export async function getAllPosts(): Promise<PostMeta[]> {
         })
     );
 
+    const filteredPosts = posts.filter((post): post is PostMeta => post !== null);
+
     // Sort posts by date (newest first)
-    return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return filteredPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     console.error("Error reading posts directory", e);
     return [];

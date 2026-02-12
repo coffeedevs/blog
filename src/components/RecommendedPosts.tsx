@@ -6,6 +6,16 @@ interface RecommendedPostsProps {
   currentSlug: string;
 }
 
+function slugHash(input: string): number {
+  let hash = 0;
+
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
+  }
+
+  return hash;
+}
+
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
@@ -21,13 +31,13 @@ function formatTimeAgo(dateString: string): string {
 export default async function RecommendedPosts({ currentSlug }: RecommendedPostsProps) {
   const allPosts = await getAllPosts();
 
-  // Get 3 random posts that are not the current post
+  // Pick 3 deterministic "random-like" posts based on slug hash, keeping renders pure.
   const otherPosts = allPosts.filter(post => post.slug !== currentSlug);
-  const randomPosts = otherPosts
-    .sort(() => Math.random() - 0.5)
+  const seededPosts = [...otherPosts]
+    .sort((a, b) => slugHash(`${currentSlug}:${a.slug}`) - slugHash(`${currentSlug}:${b.slug}`))
     .slice(0, 3);
 
-  if (randomPosts.length === 0) {
+  if (seededPosts.length === 0) {
     return null;
   }
 
@@ -37,7 +47,7 @@ export default async function RecommendedPosts({ currentSlug }: RecommendedPosts
         <h3 className="m-section-title in-recommended">Recomendado para ti</h3>
         <div className="m-recommended-articles">
           <div className="l-grid l-grid--3">
-            {randomPosts.map((post) => {
+            {seededPosts.map((post) => {
               const readingTime = Math.ceil((post.excerpt?.split(' ').length || 0) / 200);
 
               return (

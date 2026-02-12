@@ -16,11 +16,8 @@ export default function PostLayout({ children, title, featureImage, slug }: Post
     <>
       <Header />
       <main className="main-wrap">
-        <Hero featureImage={featureImage} showContent={false} />
+        <Hero title={title} featureImage={featureImage} showContent description={null} />
         <article>
-          <div className="l-wrapper in-post">
-            <h1 className="m-post-title">{title}</h1>
-          </div>
           <ShareButtons title={title} slug={slug} />
           {children}
         </article>

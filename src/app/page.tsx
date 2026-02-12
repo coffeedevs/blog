@@ -1,9 +1,9 @@
-
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import FeaturedSlider from "@/components/FeaturedSlider";
 import ArticleGrid from "@/components/ArticleGrid";
 import Footer from "@/components/Footer";
+import { unstable_noStore as noStore } from "next/cache";
 import { getAllPosts, PostMeta, transformImagePath } from "@/lib/getPostData";
 
 // Transform MDX post data to match component expectations
@@ -28,6 +28,10 @@ function transformPostsForComponents(posts: PostMeta[]) {
 }
 
 export default async function Home() {
+  if (process.env.NODE_ENV === "development") {
+    noStore();
+  }
+
   const posts = await getAllPosts();
   const transformedPosts = transformPostsForComponents(posts);
 

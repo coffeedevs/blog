@@ -8,14 +8,20 @@ interface PageContentProps {
 
 export default async function PageContent({ slug }: PageContentProps) {
   const filePath = path.join(process.cwd(), "..", "static-blog", slug.join("/"), "index.html");
+  let bodyContent = "";
+  let hasError = false;
 
   try {
     const html = await fs.readFile(filePath, "utf-8");
     const $ = cheerio.load(html);
-    const bodyContent = $("body").html();
-    return <div dangerouslySetInnerHTML={{ __html: bodyContent || "" }} />;
+    bodyContent = $("body").html() || "";
   } catch {
-    // Handle error, e.g., return a specific error message or null
+    hasError = true;
+  }
+
+  if (hasError) {
     return <div>Error loading page content.</div>;
   }
+
+  return <div dangerouslySetInnerHTML={{ __html: bodyContent }} />;
 }

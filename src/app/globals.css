@@ -44,3 +44,8 @@
     margin-top: 67px;
   }
 }
+.m-search {
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+}
