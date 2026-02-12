@@ -6,8 +6,12 @@ import "prismjs/themes/prism-okaidia.css";
 const sourceSans = Source_Sans_3({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://blog.coffeedevs.com"),
   title: "Café de por medio - CoffeeDevs",
   description: "Tutoriales, guías y experiencias sobre desarrollo de Software. Laravel, Vue, performance, servidores y más!",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Café de por medio - Un blog de CoffeeDevs",
     description: "Tutoriales, guías y experiencias sobre desarrollo de Software. Laravel, Vue, performance, servidores y más!",
