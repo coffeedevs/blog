@@ -18,12 +18,6 @@ export default function Footer() {
         
         <p className="m-footer-copyright">
           <span>Café de por medio &copy; 2022</span>
-          <span>&nbsp; &bull; &nbsp;</span>
-          <span>Publicado con <a href="https://ghost.org" target="_blank" rel="noopener">Ghost</a></span>
-        </p>
-        
-        <p className="m-footer-copyright jslicense">
-          <a href="/assets/html/javascript.html" rel="jslicense">Información de licencia JavaScript</a>
         </p>
       </div>
     </footer>
