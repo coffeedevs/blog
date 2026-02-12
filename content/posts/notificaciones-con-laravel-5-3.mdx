@@ -1,0 +1,144 @@
+---
+title: "Notificaciones con Laravel 5.3"
+slug: "notificaciones-con-laravel-5-3"
+date: "2016-10-09"
+featured: false
+featureImage: "/content/images/2016/10/laravel-5-3.png"
+excerpt: "Toda aplicación web hoy por hoy tiene uno o varios eventos que van sucediendo a"
+tags:
+  - "laravel"
+  - "5.3"
+  - "notificaciones"
+  - "mailtrap"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Toda aplicación web hoy por hoy tiene uno o varios eventos que van sucediendo a medida que se las usa, y suele ser necesario notificar a los usuarios o a los administradores de dichos eventos, ya sea mediante email, SMS, notificación push y demás.
+
+Con **Laravel 5.3**, es increíble lo fácil que es crear notificaciones y además, hay muchísimos drivers creados por la comunidad para enviar las notificaciones por distintos medios, como por ejemplo a Trello, Evernote, Telegram o Facebook!
+
+En este tutorial les vamos a mostrar un rápido ejemplo para que vean lo sencillo que es, manos a la obra!
+
+## La aplicación Laravel base
+
+Primero que nada, construiremos el esqueleto de nuestra aplicación.
+
+Para esto, podemos usar el instalador de Laravel (`laravel new notifications`), composer (`composer create-project --prefer-dist laravel/laravel notifications`) o [Laragon](http://) si están trabajando en Windows y lo tienen instalado (recomendado!).
+
+Una vez que se terminó de instalar **Laravel**, configuramos nuestro archivo `.env` para que pueda enviar mails de prueba. Esto lo necesitaremos ya que en nuestro ejemplo, utilizaremos el driver `mail` para enviar notificaciones.
+
+Para enviar mails de prueba de forma sencilla en **Laravel**, tenemos dos opciones: la primera, y la más fácil, es utilizar el driver `log` en nuestro `.env`.
+
+Esto enviará todos los mails como texto plano a nuestro archivo `storage/logs/laravel.log`.
+
+La segunda opción requiere crear una cuenta en [Mailtrap](http://mailtrap.io) pero bien vale la pena, y para configurar nuestro `.env` simplemente usamos el driver `smtp` y ponemos el usuario y contraseña que nos da:
+
+```php
+MAIL_DRIVER=smtp
+MAIL_HOST=mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=794ec49*******
+MAIL_PASSWORD=8e3b4b6*******
+MAIL_ENCRYPTION=null
+
+```
+
+También crearemos una pequeña vista para ver cuando se realizan las notificaciones satisfactoriamente. Lo haremos copiando la vista `welcome.blade.php` que viene por defecto y aplicandole un pequeño cambio:
+
+```php
+            
+                
+                    Laravel
+                
+
+                
+                    [Documentation](https://laravel.com/docs)
+                    [Laracasts](https://laracasts.com)
+                    [News](https://laravel-news.com)
+                    [Forge](https://forge.laravel.com)
+                    [GitHub](https://github.com/laravel/laravel)
+                
+
+            
+
+```
+
+**Por esto**
+
+```php
+<div class="content">
+        <div class="title m-b-md">
+            El usuario {{ $user->name }} fue notificado!
+        </div>
+    </div>
+```
+
+Guardaremos nuestra nueva vista con el nombre `notified.blade.php`
+
+Ahora que tenemos nuestro mail y vista configurados, ya podemos crear nuestra notificación y probarla.
+
+## Creando nuestra primer notificación
+
+Crear nuestra notificación es tan simple como elegir su nombre y escribir `php artisan make:notification Nombre` en la consola.
+
+En nuestro caso, creamos una notificación para nuevas suscripciones, por lo que hicimos lo siguiente `php artisan make:notification SuspiciousLogin`, que alerte al usuario de logins sospechosos.
+
+Laravel creará en nuestro directorio `app` una carpeta `Notifications` y nuestra nueva notificación `SuspiciousLogin.php`.
+
+Por defecto, Laravel utiliza el driver `mail` para notificaciones y viene con una vista estándar.
+
+Si queremos, podemos configurar el mensaje que nos llegará por mail al ser notificados:
+
+```php
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('Inicio de sesión sospechoso')
+            ->greeting('Hola ' . $notifiable->name)
+            ->line('Hubo un inicio de sesión sospechoso!')
+            ->line('Si no fuiste vos, entra a tu perfil para cambiar tu clave')
+            ->action('Cambiar Clave', 'https://laravel.com')
+            ->line('Gracias por usar nuestra aplicación!');
+    }
+
+```
+
+Nos falta un pequeño paso y ya podremos probar nuestra aplicación!
+
+## Uniendo todo
+
+A modo de ejemplo, pondremos la lógica en nuestro archivo `routes/web.php`.
+
+Necesitamos crear un usuario (que ya implementa el trait `Notifiable`, lo que permite que podamos notificarlo) y notificarlo:
+
+```php
+Route::get('suscribe', function (Faker\Generator $faker) {
+    $user = new User();
+    $user->name = $faker->name;
+    $user->email = $faker->email;
+    $user->password = bcrypt($faker->password);
+    $user->notify(new SuspiciousLogin());
+
+    return view('notified', ['user' => $user]);
+});
+
+```
+
+Usamos un poco de [Faker](https://github.com/fzaninotto/Faker) para ir variando los usuarios con distintas pruebas.
+
+Como sólo creamos instancias nuevas, sin guardarlos a base de datos, no necesitamos configurarla ni realizar migraciones.
+
+Y listo!
+
+Para probar nuestra aplicación, solo hace falta visitar nuestra ruta `/suscribe`, **Laravel** generará un usuario nuevo para la duración de la petición, creará una nueva notificación y se la enviará, sólo que **Mailtrap** o nuestro log serán los que la reciban en este caso, y no el usuario.
+
+![Notifications](/content/images/2016/10/notifications.png)
+
+Espero que esto les muestre lo sencillo que es realizar con **Laravel 5.3** tareas muy complejas en cualquier otro contexto.
+
+Este fue un ejemplo muy introductorio y básico, pero si les interesó, dejennos sus comentarios y podemos armar un ejemplo más avanzado con algún otro de los drivers, incluyendo los de [la comunidad de Laravel](http://laravel-notification-channels.com/)!

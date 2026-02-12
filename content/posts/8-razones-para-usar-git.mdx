@@ -1,0 +1,64 @@
+---
+title: "8 Razones por las que debes usar Git"
+slug: "8-razones-para-usar-git"
+date: "2016-07-18"
+featured: false
+featureImage: "/content/images/2016/07/Git-rename-branch.jpg"
+excerpt: "Para los que aún no han oído hablar de Git [https://git-scm.com/] (donde"
+tags:
+  - "git"
+  - "deployment"
+  - "development"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Para los que aún no han oído hablar de [Git](https://git-scm.com/) (donde estuvieron?!), es un software de gestión de versiones diseñado por [Linus Torvalds](https://es.wikipedia.org/wiki/Linus_Torvalds), creador del kernel de Linux, para mantener de forma eficaz un proyecto de software de forma distribuida, ordenada y robusta.
+
+Si estás leyendo esto, lo más probable es que todavía estés utilizando **FTP** para mostrar cambios en un sitio web alojado en un servidor, reemplazando archivos por su versión más reciente.
+
+> Si todavía están usando FTP o SFTP para desplegar sus proyectos en un servidor, es hora de que reconsideren pasarse a Git, y abrazar todas las ventajas de la gestión de versiones
+
+Veamos algunos de los problemas que surgen con este enfoque:
+
+1- Trabajo colaborativo. Cómo hacemos para trabajar varios desarrolladores en un mismo archivo? Qué versión es la final? Cómo hacemos para que nuestros cambios no sobrescriban los de mis compañeros?
+
+2- Volver a una versión anterior. Ctrl+Z es la única forma de volver atrás en un mismo archivo, eso teniendo en cuenta que el archivo o el editor tengan la historia del mismo, de lo contrario, estamos perdidos.
+
+Para evitar eso, tenemos varios backups del mismo archivo y sus distintas versiones editadas a lo largo del tiempo.
+
+3- Subir múltiples archivos en un proyecto muy grande (1000+) lleva muchísimo tiempo, ya que generalmente reemplazamos **TODO** el proyecto, o sino tenemos que ir manualmente, directorio por directorio, subiendo sólo los archivos cambiados.
+
+Lento y propenso a errores, además del ancho de banda que consume reemplazar todo el proyecto cada vez que hacemos cambios.
+
+4- Facilidades a la hora de compartir el código. Supongamos que queremos hacer una librería o un proyecto **Open Source**. Quienes tienen permiso a que archivos, cómo nos ponemos de acuerdo para editar código sin pisar el trabajo del otro, cómo evitamos que se borre o pierda parte del trabajo por algún error?
+
+Si todavía están usando FTP o SFTP para desplegar sus proyectos en un servidor, es hora de que reconsideren pasarse a Git, y abrazar todas las ventajas de la gestión de versiones
+
+1- **Facilita el trabajo colaborativo**: Distintos programadores pueden estar editando el mismo archivo, o versiones distintas del mismo archivo, y todos los cambios serán reflejados en el documento final.
+
+2- **Reduce considerablemente los tiempos de deploy** (despliegue) de un proyecto, al subir solamente los cambios (no los archivos cambiados, sólo los cambios!), que en Git se conoce como "diff": las diferencias entre la versión local (la que estás trabajando) y la "master" que está en el servidor central.
+
+3- **Permite regresar a versiones anteriores de forma sencilla y muy rápida.** En caso de haber realizado cambios negativos en un proyecto en producción, volver a la última versión estable es un simple comando, que retrocede a su estado previo **todos los cambios realizados en la última modificación**. Esto puede hacerse hacia cualquier versión del proyecto, sin importar la cantidad o calidad de los cambios posteriores.
+
+4- **Permite generar flujos de trabajo** que facilitan el desarrollo y mantenimiento de proyectos de gran tamaño.
+
+5- **El ecosistema Git es increíble**, y agrega un montón de herramientas a nuestra disposición para facilitarnos el trabajo, de forma robusta, rápida y profesional.
+
+A través de los **"hooks"** de Git, los distintos servicios pueden detectar cambios en el historial de versiones y realizar acciones automáticas (como actualizar los archivos en el servidor o ejecutar una suite de tests y enviarnos su resultado), dejándonos tiempo libre para cosas más productivas!
+
+6- Las **"branches"** o ramas, permiten trabajar con una base de código paralela al proyecto en sí, donde podemos corregir bugs o desarrollar nuevas características para el producto sin afectar el **"master"**, pero manteniendo todas las ventajas de usar un sistema de control de versiones. Una vez que estamos contentos con nuestro **"branch"**, podemos combinarlo con el **"master"** o, en lenguaje Git, hacer un **"merge"**.
+
+7- Empezar a trabajar desde otro entorno es tan fácil como **"clonar"** el proyecto a tu nuevo entorno, trabajar sobre los archivos que se quieran, y subir los cambios al **"master"** o a una **"branch"**.
+
+8- Sistema de etiquetas, para etiquetar las distintas versiones del proyecto. Esto es un marcador a una versión específica del proyecto, sólo que en lugar de tener distintos backups de versiones anteriores, apuntamos a distintas versiones dentro de la misma base de código.
+
+Y si todo eso no los entusiasma para cambiarse a Git, les digo que por experiencia personal, una vez que empiecen a usarlo, nunca más van a poder trabajar en un proyecto en el que no lo tengan!
+
+Próximamente, voy a compartirles una introducción a [GitKraken](https://www.gitkraken.com/), una excelente interfaz para Git, que les hará más sencillo todo ;)
+
+*Ya usan Git? Cómo les resultó el cambio de FTP? Qué les costó más? Qué más les gustaría saber?*

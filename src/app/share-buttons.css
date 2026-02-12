@@ -1,0 +1,183 @@
+/* Share Buttons - from original blog */
+
+.m-share {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 45px;
+  z-index: 3;
+  background-color: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1), 0 0 0 transparent;
+}
+
+@media only screen and (min-width: 768px) {
+  .m-share {
+    height: 50px;
+  }
+}
+
+@media only screen and (min-width: 1024px) {
+  .m-share {
+    position: absolute;
+    top: 0;
+    left: auto;
+    right: -75px;
+    width: 40px;
+    height: auto;
+    background-color: transparent;
+    box-shadow: 0 0 0 transparent, 0 0 0 transparent;
+  }
+}
+
+@media only screen and (min-width: 1280px) {
+  .m-share {
+    width: 50px;
+    right: -175px;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .m-share {
+    right: -200px;
+  }
+}
+
+.m-share a {
+  color: inherit !important;
+}
+
+.m-share a:first-of-type {
+  margin-left: 0;
+}
+
+@media only screen and (min-width: 1024px) {
+  .m-share a:first-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.m-share button:last-of-type {
+  margin-right: 0;
+}
+
+.m-share__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+@media only screen and (min-width: 1024px) {
+  .m-share__content {
+    position: sticky;
+    top: 100px;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    height: auto;
+  }
+}
+
+/* Icon Button Share Styles */
+.m-icon-button.in-share {
+  color: #333;
+  font-size: 0.75rem;
+  text-decoration: none;
+  width: 31px;
+  height: 31px;
+  margin: 0 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: transparent;
+}
+
+@media only screen and (min-width: 1024px) {
+  .m-icon-button.in-share {
+    font-size: 0.875rem;
+    width: 40px;
+    height: 40px;
+    margin: 0 0 20px;
+  }
+}
+
+@media only screen and (min-width: 1280px) {
+  .m-icon-button.in-share {
+    font-size: 1rem;
+    width: 50px;
+    height: 50px;
+  }
+}
+
+.m-icon-button.filled {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(108, 108, 108, 0.2), 0 0 0 transparent;
+  transition: all 0.25s cubic-bezier(0.02, 0.01, 0.47, 1);
+}
+
+.m-icon-button.filled:hover {
+  box-shadow: 0 4px 8px rgba(108, 108, 108, 0.3), 0 0 0 transparent;
+}
+
+.m-icon-button.progress {
+  position: relative;
+}
+
+.m-icon-button.progress svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.2s;
+}
+
+.m-icon-button.progress svg:first-child {
+  z-index: 0;
+}
+
+.m-icon-button.progress svg:last-child {
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 1 !important;
+}
+
+.m-icon-button.progress svg circle {
+  stroke: #0470ee;
+  transform-origin: 50% 50%;
+  transform: rotate(-90deg);
+  transition: stroke-dashoffset 0.2s;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .m-share {
+    background-color: rgba(0, 0, 0, 0.99);
+  }
+
+  .m-icon-button.in-share {
+    color: #b4b4b4;
+  }
+
+  .m-icon-button.filled {
+    background-color: #111;
+    box-shadow: 0 2px 4px rgba(10, 10, 10, 0.5), 0 0 0 transparent;
+  }
+
+  .m-icon-button.filled:hover {
+    box-shadow: 0 4px 8px rgba(10, 10, 10, 0.5), 0 0 0 transparent;
+  }
+
+  .m-icon-button.progress svg circle {
+    stroke: #2c2fe6;
+  }
+}

@@ -1,0 +1,427 @@
+---
+title: "Laravel 8 - Cambios en español"
+slug: "laravel-8-cambios-en-espanol"
+date: "2020-10-10"
+featured: false
+featureImage: "/content/images/2020/10/Laravel-8--4-.png"
+excerpt: "Laravel 8 [https://laravel.com/docs/8.x/releases#laravel-8]"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+## Laravel 8
+
+Laravel 8 continua las mejoras introducidas por Laravel 7.x, incorporando Laravel Jetstream, clases para las model factories, consolidación de migraciones, trabajos por lotes, mejoras en el manejo de limitación de peticiones, mejoras en el manejo de las colas, componentes dinámicos en Blade, paginación con Tailwind, helpers para testear casos que involucren tiempo, mejoras al comando `artisan serve`, mejoras en los event listener, y una variedad de otras correcciones y mejoras de usabilidad.
+
+### Laravel Jetstream
+
+*Laravel Jetstream fue escrito por [Taylor Otwell](https://github.com/taylorotwell)*.
+
+[Laravel Jetstream](https://jetstream.laravel.com/) es un esqueleto de aplicación bellamente diseñado para Laravel. Jetstream proporciona el punto de partida perfecto para tu próximo proyecto e incluye inicio de sesión, registro, verificación de correo electrónico, autenticación de dos factores, administración de sesiones, soporte de API a través de Laravel Sanctum y administración de equipo opcional. Laravel Jetstream reemplaza y mejora el esqueleto de autenticación que existía en versiones anteriores de Laravel.
+
+Jetstream está diseñado con [Tailwind CSS](https://tailwindcss.com/) y ofrece su elección de [Livewire](https://laravel-livewire.com/) o [Inertia](https://inertiajs.com/) como esqueletos.
+
+### Directorio para los modelos
+
+Debido a la abrumadora demanda de la comunidad, el esqueleto predeterminado de la aplicación Laravel ahora contiene un directorio `app/Models`. ¡Esperamos que disfrutes de este nuevo hogar para tus modelos Eloquent! Todos los comandos relevantes del generador se han actualizado para asumir que los modelos existen dentro del directorio `app/Models`, si existe. Si el directorio no existe, Laravel asumirá que tus modelos deben colocarse dentro del directorio `app`.
+
+### Clases para Model Factories
+
+*Las clases para Model Factories fueron escritas por [Taylor Otwell](https://github.com/taylorotwell)*.
+
+Las [model factories](https://laravel.com/docs/8.x/database-testing#creating-factories) de Eloquent fueron re-escritas completamente como clases  y mejorado el soporte para las relaciones como ciudadanos de primera.
+
+Por ejemplo, la `UserFactory` incluída por defecto en Laravel queda así:
+
+```php
+<?php
+
+namespace Database\Factories;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+
+class UserFactory extends Factory
+{
+    /**
+     * The name of the factory's corresponding model.
+     *
+     * @var string
+     */
+    protected $model = User::class;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array
+     */
+    public function definition()
+    {
+        return [
+            'name' => $this->faker->name,
+            'email' => $this->faker->unique()->safeEmail,
+            'email_verified_at' => now(),
+            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+            'remember_token' => Str::random(10),
+        ];
+    }
+}
+```
+
+Gracias al nuevo trait `HasFactory` disponible en los modelos generados, puede utilizarse de la siguiente forma:
+
+```php
+use App\Models\User;
+
+User::factory()->count(50)->create();
+
+```
+
+Como las model factories ahora son simples clases de PHP, las transformaciones de estado pueden escribirse como métodos de clase. Además, puedes agregar otras clases de ayuda, tantas como necesites.
+
+Por ejemplo, tu modelo `User`puede tener un estado `suspended` que modifica el valor por defecto de uno de los atributos. Puedes definir las transformaciones de estado usando el método `state` de la clase base. Puedes nombrar este método como quieras. Después de todo, es un método típico de PHP:
+
+```php
+/**
+ * Indicate that the user is suspended.
+ *
+ * @return \Illuminate\Database\Eloquent\Factories\Factory
+ */
+public function suspended()
+{
+    return $this->state([
+        'account_status' => 'suspended',
+    ]);
+}
+
+```
+
+Después de definir el método de transformación de estado, podemos usarlo así:
+
+```php
+use App\Models\User;
+
+User::factory()->count(5)->suspended()->create();
+
+```
+
+Como se mencionó, las *model factories* de Laravel 8 contienen soporte de primera clase para las relaciones. Entonces, asumiendo que nuestro modelo `User` tiene un método de relación `posts`, podemos simplemente ejecutar el siguiente código para generar un usuario con tres publicaciones:
+
+```php
+$users = User::factory()
+            ->hasPosts(3, [
+                'published' => false,
+            ])
+            ->create();
+
+```
+
+Para facilitar el proceso de actualización, se lanzó el paquete [laravel/legacy-factories](https://github.com/laravel/legacy-factories) para brindar soporte a la iteración anterior de *model factories* en Laravel 8.x.
+
+Las *model factories* reescritas de Laravel contienen muchas más características que pensamos que te encantarán. Para obtener más información sobre las model factories, consulte la [documentación de prueba de la base de datos](https://laravel.com/docs/8.x/database-testing#creating-factories).
+
+### Consolidación de migraciones
+
+*Consolidación de migraciones fue contribuido por [Taylor Otwell](https://github.com/taylorotwell)*.
+
+A medida que crece su aplicación, puede acumular más y más migraciones a lo largo del tiempo. Esto puede hacer que su carpeta de migraciones crezca con potencialmente cientos de migraciones. Si está utilizando MySQL o PostgreSQL, ahora puede "aplastar" sus migraciones en un solo archivo SQL. Para comenzar, ejecute el comando `schema: dump`:
+
+```php
+php artisan schema:dump
+
+// Volcar el esquema de la base de datos actual y eliminar todas las migraciones existentes...
+php artisan schema:dump --prune
+
+```
+
+Cuando ejecutas este comando, Laravel escribirá un archivo "esquema" en tu directorio `database/schema`. Ahora, cuando intente migrar su base de datos y no se hayan ejecutado otras migraciones, Laravel ejecutará primero el SQL del archivo de esquema. Después de ejecutar los comandos del archivo de esquema, Laravel ejecutará las migraciones restantes que no formaban parte del esquema volcado.
+
+### Trabajos por lotes
+
+*Trabajos por lotes fue contribuido por [Taylor Otwell](https://github.com/taylorotwell) & [Mohamed Said](https://github.com/themsaid)*.
+
+La función de procesamiento de trabajos por lotes de Laravel le permite ejecutar fácilmente un lote de trabajos y luego realizar alguna acción cuando el lote de trabajos se haya completado.
+
+El nuevo método `batch` de la fachada `Bus` se puede utilizar para despachar un lote de trabajos. Por supuesto, el procesamiento por lotes es principalmente útil cuando se combina con callbacks. Por lo tanto, puede usar los métodos `then`, `catch` y `finally` para definir callbacks para todo el lote. Cada una de estas callbacks recibirá una instancia `Illuminate\Bus\Batch` cuando se invoquen:
+
+```php
+use App\Jobs\ProcessPodcast;
+use App\Podcast;
+use Illuminate\Bus\Batch;
+use Illuminate\Support\Facades\Bus;
+use Throwable;
+
+$batch = Bus::batch([
+    new ProcessPodcast(Podcast::find(1)),
+    new ProcessPodcast(Podcast::find(2)),
+    new ProcessPodcast(Podcast::find(3)),
+    new ProcessPodcast(Podcast::find(4)),
+    new ProcessPodcast(Podcast::find(5)),
+])->then(function (Batch $batch) {
+    // Todos los trabajos se completaron con éxito...
+})->catch(function (Batch $batch, Throwable $e) {
+    // Se detectó el primer error del lote...
+})->finally(function (Batch $batch) {
+    // El lote se terminó de ejecutar...
+})->dispatch();
+
+return $batch->id;
+
+```
+
+Para obtener más información sobre el procesamiento de trabajos por lotes, consulte la [documentación de colas](https://laravel.com/docs/8.x/queues#job-batching).
+
+### Mejoras en limitación de peticiones
+
+*Las mejoras en limitación de peticiones fue contribuido por [Taylor Otwell](https://github.com/taylorotwell)*.
+
+La función de limitación de peticiones de Laravel se ha mejorado con más flexibilidad y potencia, al tiempo que mantiene la compatibilidad hacia atrás con la API de middleware "throttle" de la versión anterior.
+
+Los limitadores de peticiones se definen utilizando el método `for` de la fachada `RateLimiter`. El método `for` acepta un nombre de limitador de peticiones y un *closure* que devuelve la configuración de límite que debe aplicarse a las rutas a las que se les asigna este limitador de peticiones:
+
+```php
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+
+RateLimiter::for('global', function (Request $request) {
+    return Limit::perMinute(1000);
+});
+
+```
+
+Dado que los *callbacks* del limitador de peticiones reciben una instancia de la solicitud HTTP entrante, puede crear el límite de peticiones apropiado de forma dinámica en función de la solicitud entrante o del usuario autenticado:
+
+```php
+RateLimiter::for('uploads', function (Request $request) {
+    return $request->user()->vipCustomer()
+                ? Limit::none()
+                : Limit::perMinute(100);
+});
+
+```
+
+A veces, es posible que desee segmentar los límites por algún valor arbitrario. Por ejemplo, es posible que desee permitir que los usuarios accedan a una ruta determinada 100 veces por minuto por dirección IP. Para lograr esto, puede usar el método `by` cuando construya su límite de solicitudes:
+
+```php
+RateLimiter::for('uploads', function (Request $request) {
+    return $request->user()->vipCustomer()
+                ? Limit::none()
+                : Limit::perMinute(100)->by($request->ip());
+});
+
+```
+
+Se pueden adjuntar limitadores de peticiones a rutas o grupos de rutas usando el [middleware](https://laravel.com/docs/8.x/middleware) `throttle`. El middleware `throttle` acepta el nombre del limitador que desea asignar a la ruta:
+
+```php
+Route::middleware(['throttle:uploads'])->group(function () {
+    Route::post('/audio', function () {
+        //
+    });
+
+    Route::post('/video', function () {
+        //
+    });
+});
+
+```
+
+Para aprender más acerca de esta función, por favor consulta la [documentación de enrutamiento](https://laravel.com/docs/8.x/routing#rate-limiting).
+
+### Mejoras en el Modo Mantenimiento
+
+*Las mejoras en el Modo Mantenimiento fueron contribuidas por [Taylor Otwell](https://github.com/taylorotwell) inspirado por [Spatie](https://spatie.be/)*.
+
+En versiones anteriores de Laravel, la función del modo mantenimiento `php artisan down` se puede omitir usando una "lista de permitidos" de direcciones IP que tenían permiso para acceder a la aplicación. Esta característica se ha eliminado en favor de una solución de "clave secreta"/token más simple.
+
+Mientras está en modo mantenimiento, puede usar la opción `secret` para especificar un token de omisión del modo de mantenimiento:
+
+```php
+php artisan down --secret="1630542a-246b-4b66-afa1-dd72a4c43515"
+
+```
+
+Después de colocar la aplicación en modo mantenimiento, puede navegar a la URL de la aplicación que coincide con este token y Laravel emitirá una cookie de omisión del modo de mantenimiento a su navegador:
+
+```
+https://example.com/1630542a-246b-4b66-afa1-dd72a4c43515
+
+```
+
+Cuando acceda a esta ruta oculta, será redirigido a la ruta `/` de la aplicación. Una vez que la cookie haya sido enviada a su navegador, podrá navegar por la aplicación normalmente como si no estuviera en modo de mantenimiento.
+
+#### Pre-Rendering The Maintenance Mode View
+
+Si utilizas el comando `php artisan down` durante el deployment, tus usuarios pueden encontrar errores ocasionalmente al acceder a la aplicación mientras se actualizan las dependencias de Composer u otros componentes de la infraestructura. Esto ocurre porque una parte importante de Laravel debe iniciarse para determinar que su aplicación está en modo mantenimiento y presentar la vista del modo mantenimiento utilizando Blade.
+
+Por esta razón, Laravel ahora permite pre-renderizar una vista en modo de mantenimiento que se devolverá al comienzo del ciclo de la solicitud. Esta vista se presenta antes de que se haya cargado cualquiera de las dependencias de la aplicación. Puede pre-renderizar una plantilla de su elección usando la opción `render` del comando `down`:
+
+```text
+https://example.com/1630542a-246b-4b66-afa1-dd72a4c43515
+```
+
+### Funcion `catch` para trabajos anónimos
+
+*Las función `catch` fue contribuida por [Mohamed Said](https://github.com/themsaid)*.
+
+Con el nuevo método `catch`, ahora puede proporcionar un *closure* que debe ejecutarse si no se completa correctamente un trabajo encolado anónimo después de agotar todos los reintentos configurados de la cola:
+
+```php
+use Throwable;
+
+dispatch(function () use ($podcast) {
+    $podcast->publish();
+})->catch(function (Throwable $e) {
+    // Este trabajo falló...
+});
+
+```
+
+### Componentes dinámicos en Blade
+
+*Componentes dinámicos en Blade fue contribuido por [Taylor Otwell](https://github.com/taylorotwell)*.
+
+A veces es posible que necesite renderizar un componente pero no saber qué componente debe renderizarse hasta el tiempo de ejecución. En esta situación, ahora puede usar el componente `dynamic-component` incorporado en Laravel para renderizar el componente basado en un valor de tiempo de ejecución o variable:
+
+```php
+use Throwable;
+
+dispatch(function () use ($podcast) {
+    $podcast->publish();
+})->catch(function (Throwable $e) {
+    // Este trabajo falló...
+});
+```
+
+Para obtener más información sobre los componentes de Blade, consulte la [documentación de Blade](https://laravel.com/docs/8.x/blade#components).
+
+### Mejoras en Event Listener
+
+*Las mejoras en Event Listener fueron contribuidas por [Taylor Otwell](https://github.com/taylorotwell)*.
+
+Los *event listeners* basados en *closures* ahora pueden registrarse solamente pasando un *closure* al método `Event::listen`. Laravel inspeccionará el *closure* para determinar qué tipo de evento maneja el *event listener*:
+
+```html
+<x-dynamic-component :component="$componentName" class="mt-4" />
+```
+
+Además, los *event listeners* basados en *closures* ahora se pueden marcar como encolables usando la función `Illuminate\Events\queueable`:
+
+```php
+use App\Events\PodcastProcessed;
+use function Illuminate\Events\queueable;
+use Illuminate\Support\Facades\Event;
+
+Event::listen(queueable(function (PodcastProcessed $event) {
+    //
+}));
+
+```
+
+Al igual que los trabajos en cola, puedes utilizar los métodos `onConnection`, `onQueue` y `delay` para personalizar la ejecución del *event listener*:
+
+```php
+Event::listen(queueable(function (PodcastProcessed $event) {
+    //
+})->onConnection('redis')->onQueue('podcasts')->delay(now()->addSeconds(10)));
+
+```
+
+Si deseas manejar fallas en *event listeners* anónimos, puedes proporcionar un *closure* al método `catch` mientras defines el *event listener* `queueable`:
+
+```php
+use App\Events\PodcastProcessed;
+use function Illuminate\Events\queueable;
+use Illuminate\Support\Facades\Event;
+use Throwable;
+
+Event::listen(queueable(function (PodcastProcessed $event) {
+    //
+})->catch(function (PodcastProcessed $event, Throwable $e) {
+    // El listener falló...
+}));
+
+```
+
+### Funciones helper para pruebas con tiempos
+
+*Funciones helper para pruebas con tiempos fueron contribuidos por [Taylor Otwell](https://github.com/taylorotwell) inspirado en Ruby on Rails*.
+
+Cuando se hace pruebas, puede necesitarse modificar la hora devuelta por funciones *helper* como `now` o `Illuminate\Support\Carbon::now()`. La clase base de Laravel ahora incluye *helpers* que permiten manipular la hora actual:
+
+```php
+public function testTimeCanBeManipulated()
+{
+    // Viajar al futuro...
+    $this->travel(5)->milliseconds();
+    $this->travel(5)->seconds();
+    $this->travel(5)->minutes();
+    $this->travel(5)->hours();
+    $this->travel(5)->days();
+    $this->travel(5)->weeks();
+    $this->travel(5)->years();
+
+    // Viajar al pasado...
+    $this->travel(-5)->hours();
+
+    // Viajar a un momento en particular...
+    $this->travelTo(now()->subHours(6));
+
+    // Volver al presente...
+    $this->travelBack();
+}
+
+```
+
+### Mejoras en `artisan serve`
+
+*Las mejoras en `artisan serve` fueron contribuidas por [Taylor Otwell](https://github.com/taylorotwell)*.
+
+El comando Artisan `serve` se ha mejorado con la recarga automática cuando se detectan cambios en las variables de entorno dentro de su archivo local `.env`. Anteriormente, el comando tenía que detenerse y reiniciarse manualmente.
+
+### Vistas de paginación con Tailwind
+
+El paginador de Laravel se ha actualizado para utilizar [Tailwind CSS](https://tailwindcss.com/) de forma predeterminada. Tailwind CSS es un *framework* CSS de bajo nivel altamente personalizable que brinda todos los componentes básicos que se necesitan para crear diseños a medida sin ningún diseño específico que tengas que luchar para anular. Por supuesto, las vistas Bootstrap 3 y 4 también permanecen disponibles.
+
+### Actualizaciones en los namespace para el archivo de enrutamiento.
+
+En versiones anteriores de Laravel, `RouteServiceProvider` contenía una propiedad `$namespace`. El valor de esta propiedad era automáticamente prefijado en las definiciones de ruta del controlador y las llamadas al método `action` o `URL::action`. En Laravel 8.x, esta propiedad es `null` por defecto. Esto significa que Laravel no realizará ningún prefijado automático para los *namespaces*. Por lo tanto, en las nuevas aplicaciones de Laravel 8.x, las definiciones de ruta de los controladores deben definirse utilizando la sintaxis estándar de PHP:
+
+```php
+public function testTimeCanBeManipulated()
+{
+    // Viajar al futuro...
+    $this->travel(5)->milliseconds();
+    $this->travel(5)->seconds();
+    $this->travel(5)->minutes();
+    $this->travel(5)->hours();
+    $this->travel(5)->days();
+    $this->travel(5)->weeks();
+    $this->travel(5)->years();
+
+    // Viajar al pasado...
+    $this->travel(-5)->hours();
+
+    // Viajar a un momento en particular...
+    $this->travelTo(now()->subHours(6));
+
+    // Volver al presente...
+    $this->travelBack();
+}
+```
+
+Las llamadas a los métodos relacionados con `action` deben usar la misma sintaxis:
+
+```php
+action([UserController::class, 'index']);
+
+return Redirect::action([UserController::class, 'index']);
+
+```
+
+Si prefieres el estilo Laravel 7.x para prefijos de controladores en el archivo de rutas, puedes simplemente completar la propiedad `$namespace` en el `RouteServiceProvider` de la aplicación.

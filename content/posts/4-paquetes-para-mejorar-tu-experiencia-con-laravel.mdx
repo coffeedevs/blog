@@ -1,0 +1,70 @@
+---
+title: "4 paquetes para mejorar tu experiencia con Laravel"
+slug: "4-paquetes-para-mejorar-tu-experiencia-con-laravel"
+date: "2016-11-02"
+featured: false
+featureImage: "/content/images/2016/11/Yarn-796x398.jpg"
+excerpt: "Hoy les traemos 4 paquetes que utilizamos en nuestros proyectos Laravel"
+tags:
+  - "laravel"
+  - "composer"
+  - "yarn"
+  - "npm"
+  - "packages"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Hoy les traemos 4 paquetes que utilizamos en nuestros proyectos [Laravel](https://laravel.com) que quizá no conozcan pero que resultan muy útiles para el día a día.
+
+#### Prestisimo
+
+[Prestissimo](https://github.com/hirak/prestissimo) es un paquete para [Composer](https://getcomposer.org/) (el manejador de dependencias de PHP) que permite paralelizar las descargas, lo que agiliza muchísimo la instalación de paquetes, sobretodo en proyectos grandes como **Laravel**.
+
+Simplemente tienen que instalar prestissimo como dependencia global de **Composer** y listo, cada vez que utilizen el comando composer install o update, **Prestissimo** actuará en su lugar y veras como los tiempos de instalación bajan considerablemente.
+
+**Prestissimo** es la versión de **Composer** del próximo paquete que mejorará tu vida como desarrollador:
+
+#### Yarn
+
+[Yarn](https://www.npmjs.com/package/yarn) es un manejador de dependencias para módulos Javascript escrito y mantenido por Facebook.
+
+**Yarn** funciona como [npm](https://www.npmjs.com/), utilizando el mismo repositorio de paquetes, pero descarga los paquetes de forma paralela, igual que **Prestissimo**, por lo que reduce el tiempo de instalación total. Además, **Yarn** guarda en caché todos los paquetes que descarga, lo que permite que puedas instalarlos de nuevo aunque no tengas conexión, y además son mucho más rápidos de instalar que si los tuvieras que descargar de nuevo!
+
+Y por último y no menos importante, **Yarn** introduce a las dependencias de Javascript un archivo `.lock` igual que en **Composer** que una vez en el sistema de control de versiones (git o similar), hará que todas las instalaciones de esos paquetes en distintos ambientes de desarrollo sean siempre iguales, con la enorme ventaja de que todos los developers tendrán el mismo conjunto de modulos de node, evitándonos el problema de eliminar la carpeta `node_modules` y reinstalar cada vez que teníamos un problema con npm para actualizar dependencias o versiones de paquetes nuevos.
+
+#### Laravel Debugbar
+
+[Laravel Debugbar](https://github.com/barryvdh/laravel-debugbar) es un paquete para **Laravel** para ayudar a resolver problemas en nuestras aplicaciones.
+
+Se inyecta dinámicamente en nuestra aplicación y nos va mostrando un montón de información útil sobre la misma:
+
+- Qué excepciones se produjeron y en que parte del código
+
+- Cuántas consultas estamos realizando para renderizar una vista en particular.
+
+- Cuánto tiempo tardó **Laravel** en generar el resultado.
+
+- Cuáles templates de Blade se utilizaron para renderizar la vista.
+
+- El estado de la sesión y del request.
+
+Y muchos otros datos más, que nos permiten ir debuggeando nuestra aplicación y mejorando los tiempos de respuesta de la misma.
+
+Indispensable!
+
+#### Laravel-Lang
+
+[Laravel-Lang](https://github.com/caouecs/Laravel-lang) es un paquete de idiomas para **Laravel**, con los archivos de **Laravel** en distintos idiomas listos para que podamos utilizar en nuestras aplicaciones.
+
+Esto incluye los mensajes de error de validación de formularios, de autenticación, de paginación y los mensajes que se muestran a la hora de recuperar/renovar la contraseña.
+
+Para los que trabajamos con clientes latinoamericanos o que utilizan otro idioma distinto al inglés por defecto, este paquete es una bendición y nos ahorra muchísimo tiempo.
+
+Eso fue todo, espero que les haya sido útil.
+
+Dejen sus comentarios con los paquetes que a **ustedes** les resultaron útiles!

@@ -1,0 +1,214 @@
+---
+title: "Optimizando la entrega de imágenes con Intervention (Laravel)"
+slug: "optimizando-la-entrega-de-imagenes-con-intervention-laravel"
+date: "2017-03-11"
+featured: false
+featureImage: "/content/images/2017/02/UX-management.jpg"
+excerpt: "Un problema muy común en el desarrollo de aplicaciones web es el de las imágenes"
+tags:
+  - "laravel"
+  - "optimizacion"
+  - "intervention"
+  - "cache"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Un problema muy común en el desarrollo de aplicaciones web es el de las imágenes generadas por el usuario. Cómo mostrarlas, en que tamaño, donde guardarlas, etc.
+
+Hoy vamos a mostrarles una de las opciones, la que usamos nosotros en [Coffeedevs](https://coffeedevs.com/), que tiene al paquete [Intervention](http://image.intervention.io/getting_started/introduction) como principal actor.
+
+### Que es Intervention?
+
+**Intervention es un paquete de [Composer](https://getcomposer.org/) que permite manipular imágenes**: podes cambiarles el tamaño, cropearlas, aplicarles filtros, agregar marcas de agua, etc.
+
+Está preparado para funcionar con Laravel por defecto, pero es fácil de integrar en el resto de los frameworks.
+
+Sin embargo, lo que a nosotros nos interesa en este momento es un pequeño paquete utilitario que hace de compañero de Intervention y que se llama **ImageCache**.
+
+[ImageCache](http://image.intervention.io/use/cache) lo que permite es generar transformaciones para las imágenes "on the fly", es decir, a medida que son pedidas, y guardarlas en cache, lo que nos permite mostrar versiones específicas para cada una de nuestras vistas de Laravel, con sólo tener la imagen original guardada, sin necesidad de generarlas al momento de subirlas.
+
+### Guardando las imágenes en nuestra aplicación
+
+Primero que nada, para manipular imágenes, necesitamos que nuestros usuarios suban algunas.
+
+Lo más común, y lo que menos esfuerzo requiere, es guardarlas en la carpeta `public` y mostralas con `asset()` en nuestro template Blade.
+
+Sin embargo, esto presenta algunos problemas de seguridad ya que los usuarios pueden subir archivos a un directorio público, por lo que la opción recomendada es guardarlas en `storage/app`, donde sólo la aplicación puede acceder.
+
+Para guardarlas en `storage`, basta con utilizar el siguiente código:
+
+```php
+$request->file('uploaded_file')->store('app/uploads');
+
+```
+
+Puedes leer más sobre como guardar archivos en nuestro anterior [tutorial](/nuevas-opciones-de-almacenamiento-con-laravel-5-3/)
+
+Pero para mostrar los archivos guardados en `storage`, es un poco más complicado que simplemente llamar a `asset()`:
+
+**Necesitamos una ruta dedicada en nuestra aplicación que busque las imágenes y las retorne**.
+
+### Utilizando Intervention e Imagecache
+
+Intervention va a permitirnos realizar transformaciones a nuestra imágenes a medida que nuestra aplicación las demande, a través de una URL que indique la transformación que queremos aplicar y el nombre de la imagen original:
+
+```markup
+http://intervention.dev/{ruta}/{template}/{imagen}
+
+```
+
+Ruta podría ser `images`, template puede ser `small`, `medium` o `large`, e `imagen` es el nombre de la imagen: p. e. `avatar.png`
+
+Para poder utilizar su función de cache, necesitamos instalar ambos paquetes:
+
+```bash
+composer require intervention/image intervention/imagecache
+
+```
+
+Luego, tenemos que registrar el Service Provider en `app.php`:
+
+```php
+$providers = [
+...
+    Intervention\Image\ImageServiceProvider::class,
+...
+]
+
+```
+
+Y por último, es muy importante publicar la configuración de ambos paquetes:
+
+```php
+php artisan vendor:publish
+
+```
+
+Esto nos creará dos archivos de configuración nuevos en nuestra carpeta `config`:
+
+`image.php` e `imagecache.php`.
+
+### Configurando Intervention
+
+> Intervention genera una nueva imagen a partir de la original, le aplica el filtro, la guarda en el cache, y nos la devuelve
+
+Para que podamos mostrar las imágenes subidas por nuestros usuarios en la aplicación, Intervention necesita definir una ruta donde le pediremos las imágenes transformadas.
+
+La misma la podemos definir en su archivo de configuración `imagecache.php` en la carpeta `config`:
+
+```php
+ 'images',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Storage paths
+    |--------------------------------------------------------------------------
+    |
+    | The following paths will be searched for the image filename, submited 
+    | by URI. 
+    | 
+    | Define as many directories as you like.
+    |
+    */
+    
+    'paths' => array(
+        storage_path('app/uploads'),
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Manipulation templates
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify your own manipulation filter templates.
+    | The keys of this array will define which templates 
+    | are available in the URI:
+    |
+    | {route}/{template}/{filename}
+    |
+    | The values of this array will define which filter class
+    | will be applied, by its fully qualified name.
+    |
+    */
+   
+    'templates' => array(
+        'small' => 'Intervention\Image\Templates\Small',
+        'medium' => 'Intervention\Image\Templates\Medium',
+        'large' => 'Intervention\Image\Templates\Large',
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Image Cache Lifetime
+    |--------------------------------------------------------------------------
+    |
+    | Lifetime in minutes of the images handled by the imagecache route.
+    |
+    */
+   
+    'lifetime' => 43200,
+
+);
+
+```
+
+Como podemos ver, la ruta quedó definida como `images` y también configuramos los directorios donde Intervention va a buscar la imagen: `storage_path('app/uploads')`
+
+Ahora que ya tenemos configurado la ruta y el directorio, podemos llamar a las imágenes desde nuestro template de la siguiente forma:
+
+```php
+
+![]({{ url('images/medium/avatar.png') }})
+
+```
+
+Esto realiza una llamada a la ruta que definimos y el filtro que elegimos, e **Intervention genera una nueva imagen a partir de la original, le aplica el filtro, la guarda en el cache, y nos la devuelve**.
+
+### Realizando nuestros propios templates
+
+El template `medium`, por ejemplo, resizea la imagen a 240x180, pero así como podemos usar los 3 templates base de Intervention, también podemos definir los nuestros, utilizando toda la gama de transformaciones que nos permite el paquete, como sean `fit`, `crop`, `greyscale`, etc.
+
+Para definir nuestros propios templates, tenemos que crear una clase que implemente la interfaz `Intervention\Image\Filters\FilterInterface`.
+
+Esto nos obliga a implementar el método `applyFilter(Image $image)` donde recibimos la imagen original y le aplicamos las transformaciones que querramos antes de devolverla:
+
+```php
+class Avatar implements FilterInterface
+{
+
+    public function applyFilter(Image $image)
+    {
+        return $image->fit(40, 40);
+    }
+}
+
+```
+
+Luego, en el archivo de configuración `imagecache.php` agregamos al mapa de templates la entrada con nuestra nueva clase:
+
+```php
+    'templates' => array(
+        'small' => 'Intervention\Image\Templates\Small',
+        'medium' => 'Intervention\Image\Templates\Medium',
+        'large' => 'Intervention\Image\Templates\Large',
+        'avatar' => App\Intervention\Templates\Avatar::class,
+    ),
+
+```
+
+Y para utilizarlo en nuestra aplicación hacemos lo siguiente:
+
+```markup
+
+![]({{ url('images/avatar/' . $user->avatar) }})
+
+```
+
+De esta forma podremos entregar imágenes a la medida de los requerimientos, sin necesidad de generarlas cuando se cargan, pudiendo adaptarnos fácilmente a requerimientos nuevos de tamaño, color, o proporción.
+
+Espero que les haya sido útil!

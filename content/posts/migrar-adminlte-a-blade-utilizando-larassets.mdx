@@ -1,0 +1,147 @@
+---
+title: "Migrar AdminLTE a Blade utilizando Larassets."
+slug: "migrar-adminlte-a-blade-utilizando-larassets"
+date: "2016-04-08"
+featured: false
+featureImage: "/content/images/2016/04/laravel.png"
+excerpt: "Programar en [Laravel](http://laravel.com, Sitio de Laravel) es gratificante,"
+tags:
+  - "blade"
+  - "laravel"
+  - "tips"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Programar en [Laravel]([http://laravel.com](http://laravel.com), Sitio de Laravel) es gratificante, rápido y divertido, pero así y todo, empezar un proyecto nuevo desde cero tiene sus partes tediosas.
+
+Una de ellas, es adaptar un template HTML/CSS para usar con Blade, el motor de templating de Laravel.
+
+Como cualquier programador, siempre que hago cualquier operación mecánica y tediosa más de una vez, analizo bien si puedo automatizarlo de alguna forma que me permita evitar hacerlo en mi próximo proyecto.
+
+Así que, después de dos o tres proyectos donde tuve que ir convirtiendo a mano cada `<link>` y cada `<script>`  a `asset()`, empecé a usar expresiones regulares en mi IDE para reemplazar automáticamente todas las apariciones.
+
+Obviamente, era una solución mejor que hacerlo a mano, pero no era una solución final. Así nació la idea de armar un servicio web que, dado cierto código, la adaptara automáticamente a Blade.
+
+Ese proyecto es [Larassets](http://larassets.coffeedevs.com,), y ahora te enseñaré cómo utilizarlo para agilizar el desarrollo de tu próximo proyecto!
+
+##### 1er Paso - Descargar el template
+
+Usaremos AdminLTE, un template admin dashboard de [Boostrap 3](http://getbootstrap.com) gratuito.
+
+Tú puedes usar el que quieras.
+
+Podemos descargar el template [aquí](https://almsaeedstudio.com/download/AdminLTE-master).
+
+Una vez bajado, lo descomprimimos en un directorio cualquiera. De aquí, necesitaremos `index.html`, y las carpetas `dist`, `bootstrap`y `plugins`.
+
+##### 2do Paso - Importamos los archivos al proyecto
+
+Ahora, pasaremos las 3 carpetas que mencionamos en el paso anterior, a la carpeta `public`de nuestro proyecto.
+
+Creamos nuestra `view`, y agregamos todo el contenido de `index.html` en ella.
+
+Ya podemos probarla creando una ruta a nuestra nueva `view`, solo falta utilizar [Larassets](http://larassets.coffeedevs.com) para convertir nuestros recursos a Blade.
+
+##### 3er Paso - Convertir los recursos a Blade
+
+Las dos secciones que vamos a convertir a Blade, son los `<link>` y los `<script>`. En el `<head>`tenemos los primeros, y al final del `<body>`, los segundos.
+
+Empecemos con los `<link>`:
+
+```html
+<!-- Bootstrap 3.3.5 -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="dist/css/AdminLTE.min.css">
+    <!-- AdminLTE Skins. Choose a skin from the css/skins
+         folder instead of downloading all of them to reduce the load. -->
+    <link rel="stylesheet" href="dist/css/skins/_all-skins.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="plugins/iCheck/flat/blue.css">
+    <!-- Morris chart -->
+    <link rel="stylesheet" href="plugins/morris/morris.css">
+    <!-- jvectormap -->
+    <link rel="stylesheet" href="plugins/jvectormap/jquery-jvectormap-1.2.2.css">
+    <!-- Date Picker -->
+    <link rel="stylesheet" href="plugins/datepicker/datepicker3.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="plugins/daterangepicker/daterangepicker-bs3.css">
+    <!-- bootstrap wysihtml5 - text editor -->
+    <link rel="stylesheet" href="plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
+...
+```
+
+Copiamos todo, y lo pegamos en el `<textarea>`de Larassets, presionamos **Submit**, esperamos a que nos genere el contenido modificado, y lo copiamos apretando **Copy to Clipboard**.
+
+En nuestra `<view>`, reemplazamos todo lo que copiamos con el nuevo código.
+
+Hacemos lo mismo con `<script>`:
+
+```html
+<!-- jQuery 2.1.4 -->
+    <script src="plugins/jQuery/jQuery-2.1.4.min.js"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+      $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <!-- Bootstrap 3.3.5 -->
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <!-- Morris.js charts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+    <script src="plugins/morris/morris.min.js"></script>
+    <!-- Sparkline -->
+    <script src="plugins/sparkline/jquery.sparkline.min.js"></script>
+    <!-- jvectormap -->
+    <script src="plugins/jvectormap/jquery-jvectormap-1.2.2.min.js"></script>
+    <script src="plugins/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
+    <!-- jQuery Knob Chart -->
+    <script src="plugins/knob/jquery.knob.js"></script>
+    <!-- daterangepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+    <script src="plugins/daterangepicker/daterangepicker.js"></script>
+    <!-- datepicker -->
+    <script src="plugins/datepicker/bootstrap-datepicker.js"></script>
+    <!-- Bootstrap WYSIHTML5 -->
+    <script src="plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
+    <!-- Slimscroll -->
+    <script src="plugins/slimScroll/jquery.slimscroll.min.js"></script>
+    <!-- FastClick -->
+    <script src="plugins/fastclick/fastclick.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="dist/js/app.min.js"></script>
+    <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+    <script src="dist/js/pages/dashboard.js"></script>
+    <!-- AdminLTE for demo purposes -->
+    <script src="dist/js/demo.js"></script>
+```
+
+Reemplazamos el código con el nuevo que generó Larassets, y listo, tanto `.css` como `.js`quedaron envueltos en `asset()`.
+
+Si todavía no lo hicimos, no sería mala  idea también, separar ambos bloques de código en secciones, para organizar mejor nuestro proyecto:
+
+```html
+
+...
+@section('styles')
+   @include('partial.styles')
+@show
+
+...
+@section('scripts')
+   @include('partial.scripts')
+@show
+
+```
+
+Eso fue todo, espero que les haya servido!

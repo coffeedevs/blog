@@ -1,0 +1,50 @@
+---
+title: "Laravel Forge, servidores administrados para PHP"
+slug: "laravel-forge-servidores-administrados-para-php"
+date: "2016-11-18"
+featured: false
+featureImage: "/content/images/2016/11/1479059532laravel5_image_rocket.png"
+excerpt: "En otras ocasiones hemos hablado de la importancia de nuestro entorno de"
+tags:
+  - "laravel"
+  - "forge"
+  - "php"
+  - "servidores"
+  - "vps"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+En otras ocasiones hemos hablado de la importancia de nuestro entorno de producción y las ventajas de utilizar [Git](/8-razones-para-usar-git/) y [VPS](/como-crear-tu-propio-servidor-lamp/) para el deployment de nuestras aplicaciones.
+
+Pero, tener tu propio servidor VPS puede consumir bastante tiempo y hay mucho para aprender si tu conocimiento no involucra servidores, servidores web o terminales linux, o quizá simplemente quieres algo más parecido a [Heroku](https://www.heroku.com/), donde puedes deployear tu aplicación a producción solo con un `git push` y a la vez no perder el control de tu entorno.
+
+Pues bien, la solución existe y se llama **Laravel Forge**.
+
+### Qué es Laravel Forge?
+
+[Forge](https://forge.laravel.com) es una aplicación web desarrollada por [Taylor Otwell](https://twitter.com/taylorotwell?lang=es), creador de [Laravel](https://laravel.com/docs/5.3).
+
+Esta herramienta se conecta a nuestro proveedor de infraestructura, sea [Linode](https://www.linode.com/), [DigitalOcean](https://m.do.co/c/20b2aa2fb1f8), [Amazon Web Services](https://aws.amazon.com/es/) u otro, y nos permite crear nuevos servidores
+
+con PHP 7, Nginx, MySql o MariaDB, Postgres y Redis por defecto, sin que nosotros tengamos que instalar nada manualmente.
+
+Si alguna vez tuvieron que configurar un certificado SSL, saben lo engorroso (pero [necesario](/ventajas-de-https-en-nuestros-sitios-web/)) que es todo eso, desde configurar el servidor web hasta generar el certificado y agregarlo a nuestro servidor.
+
+Con **Forge**, díganle adiós a todo eso porque provee una opción muy sencilla de instalación y renovación de certificados SSL, incluyendo [https://letsencrypt.org/](https://letsencrypt.org/), el proveedor gratuito de certificados!
+
+Y además de todo eso, los proyectos que subamos a **Forge**, con un simple click podemos configurarlos como auto-deploy, lo que significa que cada vez que hagamos un `git push`, **Forge** hara un `git pull` en el servidor que corresponda, correrá `composer` y `php artisan migrate` y sin realizar nada, ya tendremos nuestro sitio en producción.
+
+El tiempo que nos ahorra esta feature para iterar cambios en nuestro día a día hace que el servicio se pague solo, y que si nunca trabajaron con este tipo de workflows, queden asombrados con la rapidez con la que pueden desplegar cambios.
+
+Y todo esto no es solo para Laravel, **Forge** también nos permite subir proyectos PHP tradicionales, Wordpress, Symfony o páginas simples sin backend, manteniendo los mismos features de instalación rápida de SSL y auto-deploy.
+
+Si todavía no los convencí, pueden probarlo gratis por 5 días y jugar un poco.
+
+Nosotros ya no podemos vivir sin **Forge**!
+
+*Espero que les haya sido útil, y no olviden dejarnos sus dudas o comentarios debajo!*

@@ -1,0 +1,137 @@
+---
+title: "Nuevas opciones de almacenamiento con Laravel 5.3"
+slug: "nuevas-opciones-de-almacenamiento-con-laravel-5-3"
+date: "2016-09-18"
+featured: false
+featureImage: "/content/images/2016/09/FileUpload.png"
+excerpt: "Un caso muy común en las aplicaciones web, es permitirle al usuario subir"
+tags:
+  - "laravel"
+  - "5.3"
+  - "archivos"
+  - "uploads"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Un caso muy común en las aplicaciones web, es permitirle al usuario subir contenido a nuestra aplicación, como por ejemplo cambiar su imagen de perfil o subir una factura o un recibo en PDF.
+
+Cuando nuestro servidor **PHP** recibe un archivo, lo guarda en una carpeta temporal con un nombre y una extensión temporales.
+
+Hasta su versión 5.3, **Laravel** tenía una sencilla interfaz  para mover los archivos recién subidos a una ruta más permanente:
+
+```php
+$request->file('uploaded_file')->move($destino, $nombre);`
+
+```
+
+Pero el problema era que el archivo movido seguía teniendo el nombre y la extensión con la que se había creado en la carpeta temporal de **PHP**, algo similar a esto: `TMP3D.tmp`.
+
+Pero nosotros queremos que el archivo tenga la extensión que le corresponda, y para eso teníamos que utilizar distintos métodos para averiguar su extensión, ya se con la fachada `File` y su método `getExtension()` o validando **MIME types** manualmente, etc.
+
+Con Laravel 5.3, eso se simplificó con los nuevos métodos `store`:
+
+Para guardar un archivo que subió un usuario, podemos simplemente hacer:
+
+```php
+$request->file('uploaded_file')->store($ruta);
+
+```
+
+Automáticamente, **Laravel** va a mover el archivo del temporal de **PHP**, leerlo, averiguar que tipo de archivo tiene en base a su contenido, generar un hash con un nombre para el archivo, ponerle la extensión que corresponda y guardarlo en la carpeta `storage/app/$ruta`.
+
+Si queremos asignarle un nombre nosotros, podemos utilizar el método `storeAs($ruta, $nombre)`
+
+Si todavía no lo sabían, **Laravel** permite definir en sus archivos de configuración, distintos "discos" o sistemas de almacenamiento, ya sean locales o en la nube.
+
+Los métodos `store` de **Laravel 5.3** permiten pasarle siempre el nombre de un disco para mover el recurso ahí, de lo contrario utilizará el disco por defecto:
+
+```php
+$request->file('uploaded_file')->store($ruta, 's3');
+$request->file('uploaded_file')->store($ruta, 'local');
+$request->file('uploaded_file')->storeAs($ruta, $user->id, 's3');
+
+```
+
+**Laravel 5.3** también nos permite elegir si vamos a guardar nuestro archivo de forma pública o privada, donde en realidad lo que cambia son los permisos de lectura y escritura de la carpeta donde se guardan (o el archivo que se guarda).
+
+Por defecto, los archivos son creados de forma privada, pero puede utilizarse el siguiente método para que tengan permisos de lectura y escritura públicos:
+
+```php
+$request->file('uploaded_file')->storePublicly($ruta);
+$request->file('uploaded_file')->storePublicly($ruta, 's3');
+$request->file('uploaded_file')->storePubliclyAs($ruta, $nombre, 's3);
+
+```
+
+Por último, tenemos que tener en cuenta que si queremos generar links desde **HTML** a nuestros archivos, al estar guardados en `storage`, el método `asset()` no alcanzará esa ruta.
+
+Una opción para resolver esto, es crear un link simbólico en nuestra carpeta `public` que apunte a la carpeta de `storage` que tendría que ser visible. Así, nuestro servidor puede ver el contenido de nuestros archivos pero los permisos para modificarlos serán siempre de la aplicación.
+
+Si no podemos generar links simbólicos, podemos crear un disco en `config/filesystems.php` cuya directorio raiz sea en la carpeta `public` y utilizarlo cuando llamemos a los métodos `store()`:
+
+```php
+    'disks' => [
+
+        'local' => [
+            'driver' => 'local',
+            'root' => storage_path('app'),
+        ],
+
+        'public' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'visibility' => 'public',
+        ],
+
+        's3' => [
+            'driver' => 's3',
+            'key' => 'your-key',
+            'secret' => 'your-secret',
+            'region' => 'your-region',
+            'bucket' => 'your-bucket',
+        ],
+        
+        'assets' => [
+             'driver' => 'local',
+             'root' => public_path(),
+        ],
+
+    ],
+
+```
+
+Y luego en nuestra lógica de aplicación:
+
+```php
+$request->file('uploaded_file')->store('profile_pictures', 'assets');
+
+```
+
+Al no haber una única forma de manejar las subidas del usuario a nuestra aplicación, *quedará en nosotros elegir la mejor forma de manejar ese contenido*.
+
+Espero que esto les haya servido, y **no olviden suscribirse** a nuestro blog para estar siempre actualizados con lo **último** en Laravel, servidores y startups :D !
+
+*Saludos!*
+
+UPDATE
+
+Existe una forma de realizar links simbólicos multiplataforma con el comando `php artisan storage:link`, por lo que luego podemos utilizar
+
+```php
+$path= $request->file(uploaded_file')->store('profile_pictures', 'public');
+
+```
+
+Y para generar un link al mismo podemos usar:
+
+```php
+$url = Storage::url($path);
+
+```
+
+Espero que les haya servido!

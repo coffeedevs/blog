@@ -1,0 +1,151 @@
+---
+title: "Enviar mail de bienvenida con Laravel 5.3 Mailables"
+slug: "enviar-mail-de-bienvenida-con-laravel-5-3-mailables"
+date: "2016-09-11"
+featured: false
+featureImage: "/content/images/2016/09/laravel.jpg"
+excerpt: "Con el lanzamiento de Laravel 5.3"
+tags:
+  - "laravel"
+  - "email"
+  - "5.3"
+  - "tutorial"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Con el lanzamiento de [Laravel 5.3](/lista-de-cambios-de-laravel-5-3-en-espanol/), enviar mails se ha vuelto super sencillo, y siendo una de las características más usadas, necesarias y demandadas de cualquier aplicación web, decidí armar este tutorial.
+
+### Definiendo el alcance
+
+Para comenzar con nuestra aplicación, primero tenemos que definir cuál es el alcance de la misma, es decir, lo que queremos que realice:
+
+- Un usuario puede registrarse
+
+- Un usuario puede iniciar sesión
+
+- El sistema le enviará un mail de bievenida al usuario cuando se registre
+
+Una vez que definimos nuestro alcance, empezamos a visualizar como vamos a resolverlo técnicamente.
+
+Por suerte, **Laravel** provee un excelente sistema de autenticación, y con un simple
+
+```php
+php artisan make:auth
+
+```
+
+ya tenemos una aplicación andando con registro de usuario e inicio de sesión.
+
+Ahora, tenemos que considerar el envío de mails, para lo que tenemos dos opciones:
+
+- SMTP
+
+- HTTP API
+
+**SMTP** o Simple Mail Transfer Protocol, es el protocolo de red estándar para el envío de mails entre dispositivos.
+
+La otra opción, **HTTP API**, es una interfaz que provee un servicio a sus usuarios, en este caso, el envío de mails. En lugar de implementar nosotros el envío a través de **SMTP**, pasamos la información a una **API** que se encargará de hacerlo por nosotros.
+
+En este tutorial, utilizaremos **[Mailgun](http://mailgun.com)**, que es super simple de usar y el dashboard nos provee de muy útiles funcionalidades, como logs, estadísticas, validación de direcciones, envío masivo de mails personalizados, etc.
+
+Para configurarlo, abrimos el .env de nuestro proyecto **Laravel** y modificamos la configuración de la siguiente forma:
+
+```php
+MAIL_DRIVER=mailgun
+MAILGUN_DOMAIN=nuestrodominio.xyz
+MAILGUN_SECRET=nuestroapikeydemailgun
+
+```
+
+Una vez configurado, ya podemos mandar mails a través del **API** de **Mailgun** y utilizando el dominio que tenemos validado y declarado en nuestro archivo `.env`
+
+==Recordemos que para utilizar Mailgun, necesitamos instalar GuzzleHttp desde Composer: `composer require guzzlehttp/guzzle` ==
+
+### Manos a la obra
+
+Una vez que tenemos preparada nuestra aplicación para enviar mails, el siguiente paso es agregar la lógica a nuestra aplicación que genere y envie un mail nuevo al usuario cuando se registra.
+
+Si no lo hiciste todavía, activamos el scaffolding de **Laravel** para autenticación con `php artisan make:auth`, configuramos nuestro `.env` para que se conecte con nuestra base de datos y migramos las tablas de usuarios que vienen por defecto con **Laravel** con `php artisan migrate`.
+
+Para visualizar nuestro sitio, podemos utilizar `php artisan serve` y verlo en nuestro navegador en [http://localhost:8000](http://localhost:8000) o podemos utilizar [Laragon](/laragon-laravel-valet-para-windows/).
+
+Una vez que tenemos todo listo, vamos a utilizar la nueva forma de crear mails en **Laravel** 5.3, `php artisan make:mail WelcomeMail` nos generará un nuevo archivo **Mailable** en `app/Mail`.
+
+Nuestra nueva clase **WelcomeMail** contendrá toda la información necesaria para nuestro mail: quién la manda (*from*), el asunto (*subject*), que vista va a renderizar (*view*), y la información que necesitará la vista (*data*).
+
+En nuestro caso, vamos a crear una vista en `resources/views/emails` con nombre `welcome.blade.php`.
+
+En ella vamos a escribir algo similar a esto:
+
+```php
+
+## Bienvenido {{ $user->name }}!
+
+Esperemos que nuestra aplicación te sea de gran utilidad!
+
+Enviado automáticamente desde NombreDeAplicación
+
+```
+
+Como vemos, estamos armando un email HTML y necesitamos pasarle el usuario que se acaba de registrar para mostrar su nombre.
+
+Esto lo vamos a definir en el `__construct` de nuestro **WelcomeMail**:
+
+```php
+public $user;
+
+public function __construct(User $user)
+    {
+        $this->user = $user;
+    }
+
+```
+
+Al declarar la variable `$user` como pública, podremos accederla desde nuestro template **Blade**, y cuando construyamos nuestro mail, le pasaremos la instancia del usuario registrado.
+
+Ahora, sólo queda definir en nuestro **WelcomeMail** la construcción del mail en sí:
+
+```php
+public function build()
+{
+    return $this->view('emails.welcome')
+                ->from('no-reply@nuestrodominio.com.ar')
+                ->subject('Bienvenido!');
+}
+
+```
+
+Y en `app/Http/Controllers/Auth/RegisterController`, modificaremos donde realiza la creación del nuevo usuario para, además, enviarle el email que acabamos de crear:
+
+```php
+    protected function create(array $data)
+    {
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => bcrypt($data['password']),
+        ]);
+
+        Mail::to($user->email)->send(new WelcomeMail($user));
+        
+        return $user;
+    }
+
+```
+
+Ya está, ahora, cuando un usuario se registre satisfactoriamente, se le enviará un correo de bienvenida.
+
+Para otros casos de uso, podemos consultar la [documentación](https://laravel.com/docs/5.3/mail) de **Laravel** donde podremos aprender a agregar archivos adjuntos, enviar texto plano, agregar otras casillas en copia o copia oculta, **y más**.
+
+---
+
+Bueno, eso fue todo por ahora, esperamos que les haya servido, y nos encantaría que nos pidan otros tutoriales o temas que quieren que cubramos.
+
+Y suscribanse para recibir las últimas noticias sobre desarrollo, aplicaciones, servidores y más!
+
+Seguinos en [@coffeedevs](http://twitter.com/coffeedevs) y [@gonifacundo](http://twitter.com/gonifacundo)!

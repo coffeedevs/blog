@@ -1,0 +1,138 @@
+---
+title: "Crea tus propios helpers en Laravel"
+slug: "crea-tus-propios-helpers-en-laravel"
+date: "2017-07-23"
+featured: false
+featureImage: "/content/images/2017/07/Quotefancy-1786504-3840x2160.jpg"
+excerpt: "Muchos de ustedes conocen los helpers o funciones globales de Laravel que nos"
+tags:
+  - "laravel"
+  - "helpers"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Muchos de ustedes conocen los **helpers** o funciones globales de **Laravel** que nos permiten realizar operaciones muy comunes en nuestra aplicación de forma más sencilla, como por ejemplo  el helper `app` para instanciar objetos desde el **Service Container**, `request` para obtener un objeto con todos los datos del request actual o `route` para generar links a rutas nombradas.
+
+Si bien los **helpers** de Laravel son muy útiles, muchas veces vamos a necesitar crear los nuestros.
+
+Vamos a ver cómo crearlos, dónde declararlos y de qué forma usarlos.
+
+### El archivo helpers
+
+Declarar funciones globales en PHP es muy sencillo, es cuestión de escribirlas dentro de un archivo PHP e incluir ese archivo en cualquier lugar donde quisieramos hacer uso de ellas.
+
+Idealmente, seguiremos la convención de usar el nombre `helpers.php` para el archivo, con el fin de que otros desarrolladores puedan ubicarlo fácilmente.
+
+No hay una convención sobre la ubicación física del archivo en nuestro proyecto, pero por lo general, se agrega en la raíz del proyecto, junto a otros archivos como `artisan`.
+
+Para evitar que nuestros helpers no generen conflictos con otros ya declarados, PHP nos permite hacer un chequeo de existencia de otras funciones con el mismo nombre, algo que nosotros vamos a utilizar en cada declaración:
+
+```php
+<?php
+
+if (!function_exists('artisan')) {
+    function artisan()
+    {
+        return app()->make('Illuminate\Contracts\Console\Kernel');
+    }
+}
+```
+
+Una vez declaramos nuestro archivo, para que podamos utilizarlo en el resto del proyecto necesitaremos agregarlo al **autoloader de Composer** en nuestro `composer.json`:
+
+```json
+...
+    "autoload": {
+        "classmap": [
+            "database"
+        ],
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "files": [
+            "helpers.php"
+        ]
+    },
+...
+
+```
+
+Una vez hecho esto, tenemos que generar nuevamente nuestro archivo `autoload.php`, para esto llamamos al comando dump-autoload de **composer**:
+
+```shell
+composer dump-autoload
+
+```
+
+O más corto aún:
+
+```shell
+composer du
+
+```
+
+Ahora ya puedes usar tus funciones **helpers** en el resto de tu proyecto!
+
+### Helpers que usamos con frecuencia
+
+Cada proyecto tiene sus propias funcionalidades que se repiten a lo largo del mismo, pero en todos los proyectos terminamos necesitando siempre estas funciones para tareas generales:
+
+- `active_route` determina si estamos en la ruta nombrada que estamos comparando, y emite un output si es así, generalmente `active`. Esto sirve para marcar barras de navegación con el framework **Bootstrap** cuando navegamos un sitio en **Laravel**. Podemos cambiar el **output** si queremos como segundo parámetro, para adaptarlo a otro framework CSS.
+
+```php
+if (!function_exists('active_route')) {
+    function active_route($route, $output = 'active')
+    {
+        if (Route::current()->getName() == $route)
+            return $output;
+    }
+}
+
+```
+
+- `user` es un atajo a la muy común combinación de `auth()->user()`. Usado en todos los proyectos.
+
+```php
+if (!function_exists('user')) {
+    /**
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null|App\User
+     */
+    function user()
+    {
+        return auth()->user();
+    }
+}
+
+```
+
+- Algunas fachadas pueden reemplazarse por helpers si es una sintaxis que preferimos más, como `Storage` por `storage()` y `DB` por `db()`:
+
+```php
+if (!function_exists('db')) {
+    function db($connection = null)
+    {
+        return app()->make('db')->connection($connection);
+    }
+}
+
+if (!function_exists('storage')) {
+    /**
+     * @param null $disk
+     * @return \Illuminate\Filesystem\Filesystem
+     */
+    function storage($disk = null)
+    {
+        return app()->make('filesystem')->disk($disk);
+    }
+}
+
+```
+
+Estas funciones son muy útiles para evitar repetir lógica en distintos lugares de nuestro código, y a la vez mantener la sintaxis sencilla y sobre todo **corta** y **entendible**, una gran ventaja de las funciones por sobre las clases utilitarias, y con **soporte del IDE**, ventaja frente a las **fachadas**.
+
+Espero que les haya sido de utilidad!

@@ -1,0 +1,340 @@
+---
+title: "Lista de cambios en español para Laravel 5.4"
+slug: "lista-de-cambios-en-espanol-para-laravel-5-4"
+date: "2017-02-12"
+featured: false
+featureImage: "/content/images/2017/02/laravel-dusk.png"
+excerpt: "Lista de cambios en español para Laravel 5.4"
+tags:
+  - "laravel"
+  - "cambios"
+  - "5.4"
+  - "dusk"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+### Lista de cambios en español para Laravel 5.4
+
+**Laravel 5.4** continua con las mejoras realizadas en **Laravel 5.3**, agregando soporte para [Markdown en emails y notificaciones](https://laravel.com/docs/5.4/mail#markdown-mailables), el framework para testing [Laravel Dusk](https://laravel.com/docs/5.4/dusk), la nueva versión de Laravel Elixir, **Laravel Mix**, components y slots para Blade, route model binding en los canales de broadcast, mensajes de orden superior en colecciones, eventos de Eloquent como objetos/clases, configuraciones individuales para los intentos y el tiempo de espera de los Jobs, fachadas en tiempo real, soporte mejorado para **Redis Cluster**, modelos personalizados para tablas pivot, middlewares para limpiar y recortar input del usuario, y más. Además, el código fuente del framework fue revisado y refactorizado para ordenarlo y mantenerlo limpio.
+
+Esta documentación resume las más notables mejoras al framework; sin embargo, para listas de cambios más completas, se pueden encontrar en Github.
+
+### Markdown en mails y notificaciones
+
+Los emails en **Markdown** nos permiten tomar ventaja de las plantillas pre-construidas y componentes de notificaciones por email en tus mailables. Ya que los mensajes están escritos en Markdown, Laravel es capaz de renderizar hermosos, responsivos templates HTML para los mensajes a la vez que automáticamente genera su contraparte en texto plano. Por ejemplo, un email Markdown puede parecerse al siguiente:
+
+```php
+
+@component('mail::message')
+# Pedido enviado
+
+Su pedido ha sido enviado!
+
+@component('mail::button', ['url' => $url])
+Ver pedido
+@endcomponent
+
+Próximos pasos:
+
+- Seguir el estado de su pedido en la web
+- Pre-firmar para la entrega
+
+Gracias,
+
+{{ config('app.name') }}
+@endcomponent
+
+```
+
+Usando esta simple plantilla de Markdown, Laravel es capaz de generar un email HTML responsive y su contra-parte en texto plano:
+
+![](/content/images/2017/02/markdown.png)
+
+Para leer más acerca de Markdown email y notificaciones, revise la documentación completa sobre email y notificaciones.
+
+Puedes exportar todos tus componentes de email en Markdown a tu aplicación para personalizarlos. Para exportar los componentes, utiliza el comando Artisan `vendor:publish --tag=laravel-mail`.
+
+### Laravel Dusk
+
+Laravel Dusk provee una API para testing automatizados expresiva y fácil de utilizar, que interactua con el navegador. Por defecto, Dusk no requiere que instales un JDK o Selenium en tu computadora. En lugar de eso, Dusk utiliza una instalación independiente de [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/home). Sin embargo, eres libre de utilizar el driver compatible con Selenium que desees.
+
+Ya que Dusk trabaja usando un navegador real, podes fácilmente testear e interactuar con tu aplicación aunque use JavaScript.
+
+```php
+/**
+ * A basic browser test example.
+ *
+ * @return void
+ */
+public function testBasicExample()
+{
+    $user = factory(User::class)->create([
+        'email' => 'taylor@laravel.com',
+    ]);
+
+    $this->browse(function ($browser) use ($user) {
+        $browser->loginAs($user)
+                ->visit('/home')
+                ->press('Create Playlist')
+                ->whenAvailable('.playlist-modal', function ($modal) {
+                    $modal->type('name', 'My Playlist')
+                          ->press('Create');
+                });
+
+        $browser->waitForText('Playlist Created');
+    });
+}
+
+```
+
+Para más información sobre Dusk, consulta la [documentación completa](https://laravel.com/docs/5.4/dusk).
+
+### Laravel Mix
+
+Laravel Mix es el sucesor espiritual de Elixir, y está completamente basado en Webpack en lugar de Gulp. Laravel Mix provee una API fluida para definir los pasos de Webpack para tu aplicación Laravel, utilizando varios pre-procesadores comunes de CSS y JavaScript. A través de la encadenación de métodos, puedes definir de forma fluida tu tubería de tus activos. Por ejemplo:
+
+```javascript
+mix.js('resources/assets/js/app.js', 'public/js')
+   .sass('resources/assets/sass/app.scss', 'public/css');
+
+```
+
+### Componentes y slots de Blade
+
+Componentes y slots de Blade ofrecen beneficios similares a las secciones y diseños; sin embargo, algunos pueden encontrar el modelo mental de componentes y slots más fácil de entender. Primero, imaginemos un componente "alerta" re-utilizable que queramos utilizar en el resto de nuestra aplicación:
+
+```php
+<!-- /resources/views/alert.blade.php -->
+
+<div class="alert alert-danger">
+    {{ $slot }}
+</div>
+```
+
+La variable `{{ $slot }}` va a contener lo que quieras inyectarle al componente. Ahora, para construir este componente, podemos usar la directiva de Blade `@component`:
+
+```php
+@component('alert')
+    **Whoops!** Algo salió mal!
+@endcomponent
+
+```
+
+Slots nombrado te permiten proveer multiples puntos de inyección en un sólo comoponente:
+
+```php
+<!-- /resources/views/alert.blade.php -->
+
+<div class="alert alert-danger">
+    <div class="alert-title">{{ $title }}</div>
+
+    {{ $slot }}
+</div>
+```
+
+Slots nombrados pueden inyectarse usando la directiva `@slot`. Cualquier contenido que no esté en una directiva `@slot` será pasada al componente en la variable `$slot`:
+
+```php
+@component('alert')
+    @slot('title')
+        Acceso denegado
+    @endslot
+
+    No tienes permitido acceder a este recurso!
+@endcomponent
+
+```
+
+Para leer más acerca de componentes y slots, consulta la [documentación completa de Blade](https://laravel.com/docs/5.4/blade).
+
+### Model Binding para broadcasts
+
+Al igual que las rutas HTTP, las rutas de los canales ahora toman ventaja del route model binding implícito y explícito. Por ejemplo, en lugar de recibir un string o un o un ID numérico, puedes pedir una instancia del modelo `Order` enviado:
+
+```php
+use App\Order;
+
+Broadcast::channel('order.{order}', function ($user, Order $order) {
+    return $user->id === $order->user_id;
+});
+
+```
+
+Para leer más acerca de route model binding en los canales de broadcast, consulta la documentación completa sobre [broadcasting de eventos](https://laravel.com/docs/5.4/broadcasting).
+
+### Mensajes de orden superior para colecciones
+
+Las colecciones ahora proveen soporte para mensajes de orden superior, los cuales son atajos para realizar acciones comúnes sobre colecciones.
+
+Los métodos de colecciones que proveen mensajes de orden superior son: `contains`, `each`, `every`, `filter`, `first`, `map`, `partition`, `reject`, `sortBy`, `sortByDesc`, and `sum`.
+
+Cada función de orden superior puede ser accedida como una propiedad dinámica sobre una instancia de colección. Por ejemplo, vamos a utilizar la función de orden superior `each` para llamar a cada método dentro de una colección:
+
+```php
+$users = User::where('votes', '>', 500)->get();
+
+$users->each->markAsVip();
+
+```
+
+Así mismo, podemos utilizar la suma como mensaje de orden superior para conseguir el total del número de votos para una colección de usuarios:
+
+```php
+$users = User::where('group', 'Development')->get();
+
+return $users->sum->votes;
+
+```
+
+### Eventos de Eloquent basados en objetos
+
+Los manejadores de eventos de Eloquent ahora pueden ser mapeados a eventos de objetos. Esto provee una forma más intuitiva de manejar eventos de Eloquent y hace más fácil el testeo de eventos. Para empezar, definamos una propiedad `$events` en tu modelo Eloquent que mapea varios puntos del ciclo de vida de un modelo Eloquent a tus propias clases de eventos:
+
+```php
+<?php
+
+namespace App;
+
+use App\Events\UserSaved;
+use App\Events\UserDeleted;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class User extends Authenticatable
+{
+    use Notifiable;
+
+    /**
+     * The event map for the model.
+     *
+     * @var array
+     */
+    protected $events = [
+        'saved' => UserSaved::class,
+        'deleted' => UserDeleted::class,
+    ];
+}
+```
+
+### Tiempo de espera y número de intentos para Jobs
+
+Previamente, las configuraciones de tiempo de espera e intentos para los trabajos eran configurados globalmente desde la consola. Sin embargo, en Laravel 5.4, estas configuraciones pueden hacerse de manera individualizada para cada trabajo, directamente en la clase del trabajo:
+
+```php
+tax = $tax;
+    }
+
+    /**
+     * Pagar la cantidad acordada.
+     *
+     * @param  int  $amount
+     * @return void
+     */
+    public function pay($amount)
+    {
+        // Pagar la cantidad acordada...
+    }
+}
+
+```
+
+Puedes también utilizar la clase como fachada de esta forma:
+
+```php
+/**
+ * The application's global HTTP middleware stack.
+ *
+ * These middleware are run during every request to your application.
+ *
+ * @var array
+ */
+protected $middleware = [
+    \Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class,
+    \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+    \App\Http\Middleware\TrimStrings::class,
+    \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+];
+```
+
+Obviamente, si utilizas fachadas en tiempo real de esta forma, puedes fácilmente testearlo utilizando las capacidades de mocking de fachadas de Laravel:
+
+```php
+<?php
+
+namespace App\Services;
+
+class PaymentGateway
+{
+    protected $tax;
+
+    /**
+     * Crear una nueva instancia de PaymentGateway.
+     *
+     * @param  TaxCalculator  $tax
+     * @return void
+     */
+    public function __construct(TaxCalculator $tax)
+    {
+        $this->tax = $tax;
+    }
+
+    /**
+     * Pagar la cantidad acordada.
+     *
+     * @param  int  $amount
+     * @return void
+     */
+    public function pay($amount)
+    {
+        // Pagar la cantidad acordada...
+    }
+}
+```
+
+### Modelos personalizados para las tablas pivot
+
+En Laravel 5.3, todos los modelos de tablas pivot (o intermedias) para las relaciones `belongsToMany` usaban la misma instancia de modelo Pivot que viene por defecto.
+
+En Laravel 5.4, puedes definir modelos para tus tablas pivot  de forma personalizada.
+
+Si deseas definir un modelo personalizado que representa la tabla intermedia de tu relación, usa el siguiente método mientras describes la relación:
+
+```php
+use Facades\ {
+    App\Services\PaymentGateway
+};
+
+Route::get('/pay/{amount}', function ($amount) {
+    PaymentGateway::pay($amount);
+});
+```
+
+### Soporte mejorado para Redis Cluster
+
+Anteriormente, no era posible definir conexiones Redis a hosts individuales y a clusters a la vez en la misma aplicación. En Laravel 5.4, puedes definir conexiones a múltiples hosts individuales y a múltiples clusters dentro de la misma aplicación. Para más información sobre Redis en Laravel, puedes consultar la [documentación completa de Redis](https://laravel.com/docs/5.4/redis).
+
+### Longitud de caracteres por defecto en los String de migraciones.
+
+Laravel 5.4 usa el set de caracteres `utf8mb4` por defecto, que incluye soporte para almacenar emojis en la base de datos. Si estás actualizando tu aplicación de Laravel 5.3, no es requerido cambiar el set de caracteres.
+
+Si elijes cambiar el set de caracteres de forma manual y estás corriendo una versión de MySQL anterior a la 5.7.7, puedes necesitar configurar manualmente la longitud por defecto de los strings generados por migraciones. Puedes configurarlo llamando al método `Schema::defaultStringLength` dentro de tu `AppServiceProvider`:
+
+```php
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Bootstrap any application services.
+ *
+ * @return void
+ */
+public function boot()
+{
+    Schema::defaultStringLength(191);
+}
+
+```

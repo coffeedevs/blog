@@ -1,0 +1,277 @@
+---
+title: "Como mejorar tu API con Resources en Laravel 5.5+"
+slug: "laravel-resources"
+date: "2018-06-20"
+featured: false
+featureImage: "/content/images/2018/06/Dise-o-sin-t-tulo.png"
+excerpt: "Cuando construimos un API, nuestro objetivo es devolver la información de"
+tags:
+  - "laravel"
+  - "transformers"
+  - "api"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Cuando construimos un API, nuestro objetivo es devolver la información de nuestra base de datos de forma fácil de interpretar por el cliente.
+
+Hoy en día la forma más común de hacerlo es mediante un objeto o array JSON que representa nuestro modelo de datos de la siguiente forma:
+
+Modelo `Order`:
+
+- id
+
+- buyer_id
+
+- seller_id
+
+- order_status_id,
+
+```php
+// OrdersController
+
+public function show(Order $order)
+{
+    return $order;
+}
+
+```
+
+```json
+// Respuesta
+{
+    id: 1,
+    buyer_id: 5,
+    seller_id: 14,
+    order_status_id: 1,
+}
+
+```
+
+Esto es correcto y funciona, bien, pero podemos observar claramente como nuestra respuesta y su estructura están ligadas a la estructura de nuestra base de datos.
+
+¿Qué pasa si realizamos un cambio en nuestro esquema de datos y, por ejemplo, queremos cambiar el nombre de algún campo? ¿O decidimos mostrar los nombres de nuestras relaciones en lugar de un ID? ¿O agregar información especial al momento de devolver el resultado, como una suma, un total o un enlace?
+
+Este problema se debe a que nuestros clientes están interactuando directamente con nuestro esquema de datos, en lugar de con capa intermedia.
+
+El mismo principio que rige para los Getters y Setters de Programación Orientada a Objetos rige para las respuestas de un API: separar el resultado de la implementación concreta.
+
+### Resources al rescate
+
+Aquí es donde entran en acción los **Resources**, que funcionarán como intermediario entre nuestros clientes y nuestro esquema de datos.
+
+Veamos un ejemplo:
+
+```php
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\Resource;
+
+class OrderResource extends Resource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @param  \Illuminate\Http\Request
+     * @return array
+     */
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->seller->id,
+            'order_status_id' => $this->order_status->id,
+        ];
+    }
+}
+```
+
+Así se ve un **Resource** que reemplaza al resultado actual de nuestro API.
+
+El concepto de los **Resources** es simple, agregar una capa entre nuestra base de datos y nuestros clientes, ganando la flexibilidad de cambiar nuestra implementación sin que el usuario final se entere. Esto se logra con un simple array donde indicamos cómo y qué campos se van a mostrar al **transformar** nuestros modelos a JSON.
+
+Para generar un recurso, Laravel nos provee el siguiente comando de Artisan:
+
+```
+php artisan make:resource Order
+
+```
+
+Para que nuestras respuestas pasen a través de nuestros **Resource**, tenemos que cambiar nuestros controladores de la siguiente manera:
+
+```text
+php artisan make:resource Order
+```
+
+### Flexibilidad en el esquema de datos
+
+Supongamos por un momento que decidimos cambiar el nombre de la relación `seller` por el de `owner`. Modificamos nuestra base de datos a través de una migración de la siguiente forma:
+
+```php
+    public function up()
+    {
+        Schema::table('orders', function (Blueprint $table) {
+            $table->renameColumn('seller_id', 'owner_id');
+        });
+    }
+
+```
+
+Ahora, nuestros clientes ya están programados para interactuar con la relación `seller`, pero gracias a nuestro **Resource**, ya nuestra respuesta está desacoplada de nuestras tablas:
+
+```php
+...
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->owner->id,
+            'order_status_id' => $this->order_status->id,
+        ];
+    }
+...
+
+```
+
+Vean como incluso al cambiar una relación, la respuesta se mantiene igual, solo tuvimos que actualizar nuestro **Resource** para que tome los datos del modelo de la nueva relación.
+
+### Atributos extra
+
+También podemos agregar información a nuestras respuestas que no siempre queremos que esté disponible, por ejemplo, si la información nos llega desde un usuario dueño del recurso, podemos incluir más información que no la tendría si no lo fuera utilizando el método `when`, que recibe una condición y un valor si la condición se cumple.
+
+```php
+...
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->owner->id,
+            'order_status_id' => $this->order_status->id,
+            'total' => $this->when(auth()->user()->id == $this->owner_id, $this->order_details->sum('price')),
+        ];
+    }
+...
+
+```
+
+También podemos pasarle un Closure como segundo argumento:
+
+```php
+...
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->owner->id,
+            'order_status_id' => $this->order_status->id,
+            'total' => $this->when(auth()->user()->id == $this->owner_id, $this->order_details->sum('price')),
+        ];
+    }
+...
+```
+
+O agregar información que esté relacionada con el recurso pero no esté persistida en base de datos, como un enlace:
+
+```php
+...
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->owner->id,
+            'order_status_id' => $this->order_status->id,
+            'link' => route('api.orders.show', $this->id),
+        ];
+    }
+...
+
+```
+
+### Resources para más de un elemento
+
+Por ahora vimos solamente como transformar un solo objeto, pero qué pasa cuando queremos hacerlo con un conjunto, como en un `index`?
+
+Con Laravel **Resources** necesitamos crear una collection, y para hacerlo tenemos dos formas, mediante la opción --collection o incluyendo Collection en el nombre del recurso.
+
+```
+php artisan make:resource Orders --collection
+
+php artisan make:resource OrderCollection
+
+```
+
+En cualquier caso, Laravel generará un recurso nuevo que será el encargado de **transformar** nuestra colección de objetos al formato que nosotros querramos:
+
+```php
+...
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->owner->id,
+            'order_status_id' => $this->order_status->id,
+            'link' => route('api.orders.show', $this->id),
+        ];
+    }
+...
+```
+
+Para utilizarlo en nuestra aplicación, es igual que el **Resource** individual:
+
+```text
+php artisan make:resource Orders --collection
+
+php artisan make:resource OrderCollection
+```
+
+Hay que tener en cuenta también que al trabajar con API's, es necesario paginar los resultados, por lo que podemos pasarle un `Paginator` al ResourceCollection en lugar de una Collection:
+
+```php
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\ResourceCollection;
+
+class OrderCollection extends ResourceCollection
+{
+    /**
+     * Transform the resource collection into an array.
+     *
+     * @param  \Illuminate\Http\Request
+     * @return array
+     */
+    public function toArray($request)
+    {
+        return [
+            'data' => $this->collection,
+        ];
+    }
+}
+```
+
+El resultado se verá de la siguiente forma:
+
+```php
+Route::get('/orders', function () {
+    return new OrderCollection(Order::all());
+});
+```
+
+De esta forma podemos ver como a través de los **Resources** podemos **transformar** el resultado de nuestra API y las ventajas que esto tiene.
+
+La opción de Laravel es una excelente forma de resolver este problema, pero también hay otras soluciones, que veremos en otros posts, con algunas ventajas sobre Resources, como por ejemplo, utiliza una misma clase tanto para un solo objeto, como para una colección, o un Paginator.
+
+Espero que este tutorial les haya servido, dejen su opinión en sus comentarios!

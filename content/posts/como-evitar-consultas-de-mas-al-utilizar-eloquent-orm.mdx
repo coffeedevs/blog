@@ -1,0 +1,102 @@
+---
+title: "Cómo evitar consultas de más al utilizar Eloquent ORM"
+slug: "como-evitar-consultas-de-mas-al-utilizar-eloquent-orm"
+date: "2016-05-16"
+featured: false
+featureImage: "/content/images/2016/05/laravel-eloquent-orm.png"
+excerpt: "La sintaxis simple y natural de los ORM"
+tags:
+  - "laravel"
+  - "optimizacion"
+  - "eloquent"
+  - "sql"
+  - "orm"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+La sintaxis **simple y natural** de los [ORM](https://en.wikipedia.org/wiki/Object-relational_mapping), o Object-Relational Mapping, como [Doctrine](http://www.doctrine-project.org/) o [Eloquent](https://laravel.com/docs/master/eloquent), permite comunicarse con la base de datos como si estuviéramos manipulando objetos: en lugar de utilizar **SQL**, usamos métodos de nuestras entidades para acceder a su información:
+
+```sql
+select * from users
+
+```
+
+Pasa a ser:
+
+```php
+Users::all();
+
+```
+
+**Excelente!** Y además recibimos el beneficio extra de que al abstraernos de la base de datos, **podemos cambiar el motor de fondo (MySQL, PosgreSQL, etc.) por otro sin cambiar nuestro código!**
+
+Ahora bien, no todo es color de rosas al usar nuestros ORM, y una de las críticas que recibe, es que es muy fácil caer en el problema de las **N+1 consultas**.
+
+### Qué es el problema N+1 Consultas?
+
+Consideremos el siguiente código, en Laravel:
+
+```php
+$books = App\Book::all();
+
+foreach ($books as $book) {
+    echo $book->author->name;
+}
+
+```
+
+Donde `author` pertenece a `book`.
+
+Uno creería que el ORM es suficientemente inteligente para traer todo esto en una simple consulta, **pero en realidad lo que pasa es que el ORM realiza 1 para traer todos los libros, y luego 1 más por cada libro, para buscar su autor!**
+
+Este es **el famoso problema N+1** (Uno por cada libro para obtener su autor, más uno por la consulta inicial que trae todos los libros).
+
+Y esto sucede por el hecho de que, por defecto, **Eloquent** utiliza
+
+[Lazy Loading](https://es.wikipedia.org/wiki/Lazy_loading) para cargar las relaciones, es decir, que solamente buscará el autor de un libro sólo cuando se lo consulte, pero bueno, esto tiene el **efecto adverso de generar muchísimas consultas cuando desde un principio sabíamos que lo queríamos!**
+
+Ahora que ya sabemos a que nos enfrentamos, es importante que sepamos que **esto trae problemas de rendimiento en aplicaciones con grandes bases de datos**, y que solucionar este problema reduce muchísimo el estrés de nuestra aplicación.
+
+### Cómo lo solucionamos?
+
+Así como por defecto, **Eloquent** carga las relaciones utilizando **Lazy Loading**, podemos indicarle que utilice **Eager Loading**, o lo que es lo mismo, que traiga la información de los autores cuando pedimos los libros y evite realizar más consultas!
+
+```php
+$books = App\Book::with('author')->get();
+
+foreach ($books as $book) {
+    echo $book->author->name;
+}
+
+```
+
+Ahora las consultas son solo dos: Tráeme todos los libros, y tráeme todos los autores que estén relacionados con esos libros.
+
+En una base de datos donde consultamos 1.000.000 o más registros, **el primer caso hubiese generado 1.000.001 consultas**, mientras que la segunda, **solo 2**.
+
+***Increíble no?***
+
+Esperamos que esto les haya sido de utilidad y nos dejen sus comentarios!
+
+PD: Para visualizar un ejemplo del problema N+1 consultas y el impacto en el performance de nuestra aplicación:
+
+Base de datos con 1.000 registros, usando Book::all()
+
+![](https://dl.dropboxusercontent.com/u/7767066/1000-all.png)
+
+Base de datos con 1.000 registros, usando Book::with('author')->get()
+
+![](https://dl.dropboxusercontent.com/u/7767066/1000-with.png)
+
+Base de datos con 10.000 registros, usando Book::all()
+
+![](https://dl.dropboxusercontent.com/u/7767066/10000-all.png)
+
+Base de datos con 10.000 registros, usando Book::with('author')->get()
+
+![](https://dl.dropboxusercontent.com/u/7767066/10000-with.png)

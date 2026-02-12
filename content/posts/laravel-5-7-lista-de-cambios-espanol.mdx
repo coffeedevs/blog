@@ -1,0 +1,168 @@
+---
+title: "Laravel 5.7 - Lista de cambios en español"
+slug: "laravel-5-7-lista-de-cambios-espanol"
+date: "2018-09-05"
+featured: false
+featureImage: "/content/images/2018/09/laravel-5.7-dump-server.jpg"
+excerpt: "Laravel 5.7 continua las mejoras realizadas en Laravel 5.6 introduciendo Laravel"
+tags:
+  - "laravel"
+  - "cambios"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Laravel 5.7 continua las mejoras realizadas en Laravel 5.6 introduciendo Laravel Nova, verificación opcional por email a la generación automática de autenticación, soporte para usuarios invitados en políticas y puertas de acceso, mejoras en pruebas para comandos de consola, integración del servidor de prueba de Symfony, notificaciones localizables, y una variedad de correcciones y mejoras de usabilidad.
+
+### Laravel Nova
+
+Laravel Nova es un panel de administración para aplicaciones Laravel. Por supuesto, la principal característica de Nova es la habilidad de administrar tus registros de base de datos a través de Eloquent. Adicionalmente, Nova ofrece soporte para filtros, lentes, acciones, acciones encoladas, métricas, autorización, herramientas personalizadas, tarjetas personalizadas, campos personzalidos y más.
+
+Para aprender más acerca de Laravel Nova, revisa el sitio en el siguiente enlace: [Laravel Nova](https://nova.laravel.com/)
+
+### Email Verification
+
+Laravel 5.7 introduce verificación por email opcional a la generación automática de autenticación incluída en el framework. Para permitir esta funcionalidad, se agregó una columna `email_verified` del tipo timestamp a la tabla de usuarios incluída por defecto.
+
+Para requerir que los usuarios recién registrados validen su email, el modelo `User` debería marcarse con la interfaz `MustVerifyEmail`:
+
+```php
+<?php
+
+namespace App;
+
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class User extends Authenticatable implements MustVerifyEmail
+{
+    // ...
+}
+```
+
+Para aprender más sobre verificación por email, revisa la documentación completa en el siguiente enlace: [Verificación por email](https://laravel.com/docs/5.7/verification)
+
+### Politicas y puertas para usuarios invitados
+
+En versiones previas de Laravel, las puertas y políticas automaticamente retornaban falso para los usuarios no-autenticados en tu aplicación. Sin embargo, ahora puedes permitir que tus usuarios invitados pasen las validaciones de autorización declarando un "type-hint" opcional o utilizando un valor nulo por defecto en la definición del argumento del usuario:
+
+```php
+Gate::define('update-post', function (?User $user, Post $post) {
+    // ...
+});
+
+```
+
+### Servidor de prueba de Symfony
+
+Laravel 5.7 ofrece integración con el servidor de prueba de Symfony, a través del paquete de Marcel Pociot. Para comenzar, utiliza el comando de Artisan:
+
+```php
+Gate::define('update-post', function (?User $user, Post $post) {
+    // ...
+});
+```
+
+Una vez que el servidor está corriendo, todos los pedidos de "dump" serán mostrados en el servidor en la ventana de la consola en lugar de en tu navegador, permitiendote inspeccionar los valores sin tener que luchar con el resultado de la respuesta HTTP.
+
+### Localización de las notificaciones
+
+Laravel ahora permite enviar notificaciones en otra localización que la actual, y permite recordar la localización cuando la notificación es encolada.
+
+Para conseguir esto, la clase `Illuminate\Notifications\Notification` ahora ofrece un método `locale` para setear el lenguaje deseado. La aplicación cambia  a este `locale` cuando la notificación está siendo formateada, y vuelve al `locale` anterior una vez que termina de formatearlo:
+
+```php
+$user->notify((new InvoicePaid($invoice))->locale('es'));
+
+```
+
+La localización de múltiples notificaciones puede realizarse mediante la fachada `Notification`:
+
+```php
+Notification::locale('es')->send($users, new InvoicePaid($invoice));
+
+```
+
+### Pruebas de comandos de consola
+
+Laravel 5.7 te permite fácilmente "mockear" información suministrada por el usuario para tus comandos de consola usando el método `expectsQuestion`. Además, puedes especificar un código de salida y un texto esperado como resultado del comando para validar con los métodos `assertExitCode` y `expectsOutput`. Por ejemplo, considera el siguiente comando de consola:
+
+```php
+Artisan::command('question', function () {
+    $name = $this->ask('What is your name?');
+
+    $language = $this->choice('Which language do you program in?', [
+        'PHP',
+        'Ruby',
+        'Python',
+    ]);
+
+    $this->line('Your name is '.$name.' and you program in '.$language.'.');
+});
+
+```
+
+Puedes probar este comando con la siguiente prueba que utiliza los métodos mencionados anteriormente:
+
+```php
+/**
+ * Test a console command.
+ *
+ * @return void
+ */
+public function test_console_command()
+{
+    $this->artisan('laracon')
+         ->expectsQuestion('What is your name?', 'Taylor Otwell')
+         ->expectsQuestion('Which language do you program in?', 'PHP')
+         ->expectsOutput('Your name is Taylor Otwell and you program in PHP.')
+         ->assertExitCode(0);
+}
+
+```
+
+### Sintáxis de Callables en el generador de URLs
+
+En lugar de aceptar solamente strings, el generador de URLs de Laravel ahora acepta sintáxis `callable` cuando genera URLs en sus acciones de controlador:
+
+```php
+/**
+ * Test a console command.
+ *
+ * @return void
+ */
+public function test_console_command()
+{
+    $this->artisan('laracon')
+         ->expectsQuestion('What is your name?', 'Taylor Otwell')
+         ->expectsQuestion('Which language do you program in?', 'PHP')
+         ->expectsOutput('Your name is Taylor Otwell and you program in PHP.')
+         ->assertExitCode(0);
+}
+```
+
+### Paginator Links
+
+Laravel 5.7 te permite controlar cuantos enlaces adicionales mostrar a cada lado de la botonera de tu paginador. Por defecto, tres enlaces se mostraran a cada lado. Sin embargo, puedes controlar este número usando el método `onEachSide`:
+
+```php
+{{ $paginator->onEachSide(5)->links() }}
+
+```
+
+### Streams de lectura y escritura para el Filesystem
+
+La integración Flysystem de Laravel ahora ofrece los métodos `readStream` y `writeStream`:
+
+```php
+Storage::disk('s3')->writeStream(
+    'remote-file.zip',
+    Storage::disk('local')->readStream('local-file.zip')
+);
+
+```

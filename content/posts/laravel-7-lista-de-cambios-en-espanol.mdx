@@ -1,0 +1,392 @@
+---
+title: "Laravel 7 - Lista de cambios en español"
+slug: "laravel-7-lista-de-cambios-en-espanol"
+date: "2020-03-11"
+featured: false
+featureImage: "/content/images/2020/03/laravel7-1.jpg"
+excerpt: "Laravel 7 continua con las mejoras realizadas en Laravel 6.x, introduciendo"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Laravel 7 continua con las mejoras realizadas en Laravel 6.x, introduciendo Laravel Airlock, mejoras en la velocidad de enrutamiento, conversiones personalizadas de atributos en Eloquent, etiquetas para componentes de Blade, operaciones fluidas con strings, un cliente HTTP enfocado en desarrolladores, soporte para CORS de base, mejoras en el scope de los modelos obtenidos por Routes, personalización de Stubs para tests, mejoras en las colas con base de datos, múltiples drivers para email, un nuevo comando `artisan test`, y una variedad de otras correcciones y mejoras de usabilidad.
+
+## Laravel Airlock
+
+Laravel Airlock provee un sistema de autenticación ligero para SPAs, aplicaciones móviles, y APIs simples basadas en tokens. Airlock permite a cada usuario de tu aplicación generar múltiples tokens de API para su cuenta. Estos tokens pueden ser otorgados habilidades y alcances que especifican que acciones pueden realizar esos tokens.
+
+Para más información, revisar la documentación de Airlock.
+
+## Conversiones personalizadas para Eloquent
+
+Laravel tiene una variedad de tipos preconstruidos para hacer conversiones; sin embargo, ocasionalmente puedes necesitar definir tus propios tipos de conversión. Puedes lograr esto definiendo una clase que implementa la interfaz `CastsAttributes`.
+
+Clases que implementen esta interfaz deben definir métodos `get` y `set`. El método `get` es el responsable de transformar el valor crudo de la base de datos al valor convertido, mientras que el método `set` debe transformar el valor convertido al valor crudo para guardar en la base de datos. A modo de ejemplo, vamos a re-implementar el tipo de conversión `json` que viene en el framework:
+
+```php
+<?php
+
+namespace App\Casts;
+
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+
+class Json implements CastsAttributes
+{
+    /**
+     * Cast the given value.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  string  $key
+     * @param  mixed  $value
+     * @param  array  $attributes
+     * @return array
+     */
+    public function get($model, $key, $value, $attributes)
+    {
+        return json_decode($value, true);
+    }
+
+    /**
+     * Prepare the given value for storage.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  string  $key
+     * @param  array  $value
+     * @param  array  $attributes
+     * @return string
+     */
+    public function set($model, $key, $value, $attributes)
+    {
+        return json_encode($value);
+    }
+}
+```
+
+Una vez que definimos estos tipos, puedes asignarlo al atributo de un modelo usando el nombre de la clase:
+
+```php
+<?php
+
+namespace App;
+
+use App\Casts\Json;
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'options' => Json::class,
+    ];
+}
+```
+
+Para aprender cómo escribir tipos personalizdos de conversión, incluyendo como convertir a Value Objects, por favor consulta la documentación de Eloquent.
+
+## Etiquetas y mejoras para componentes Blade
+
+Los componentes de Blade fueron reformados para permitir su renderizado basado en etiquetas, manejo de atributos, clases y más. Dado que la reforma de los componentes de Blade es tan extensa, por favor consulta la documentación completa para aprender más sobre sus características.
+
+En resumen, un componente ahora puede asociarse a una clase que especifica la información que acepta. Todas las propiedades y métodos públicos definidos en la clase del componente estarán disponibles automáticamente a la vista del componente. Cualquier atributo extra agregado por HTML puede ser manipulado automáticamente a través de la variable `$attribute`.
+
+En este ejemplo, asumimos que `App\View\Components\Alert` es un componente definido de la siguiente forma:
+
+```php
+<?php
+
+namespace App\View\Components;
+
+use Illuminate\View\Component;
+
+class Alert extends Component
+{
+    /**
+     * The alert type.
+     *
+     * @var string
+     */
+    public $type;
+
+    /**
+     * Create the component instance.
+     *
+     * @param  string  $type
+     * @return void
+     */
+    public function __construct($type)
+    {
+        $this->type = $type;
+    }
+
+    /**
+     * Get the class for the given alert type.
+     *
+     * @return string
+     */
+    public function classForType()
+    {
+        return $this->type == 'danger' ? 'alert-danger' : 'alert-warning';
+    }
+
+    /**
+     * Get the view / contents that represent the component.
+     *
+     * @return \Illuminate\View\View|string
+     */
+    public function render()
+    {
+        return view('components.alert');
+    }
+}
+```
+
+Y, asumiendo que el template del componente está definido de la siguiente forma:
+
+```php
+<!-- /resources/views/components/alert.blade.php -->
+
+<div class="alert {{ $classForType }}" {{ $attributes }}>
+    {{ $heading }}
+
+    {{ $slot }}
+</div>
+```
+
+El componente puede renderizarse en otra vista de Blade usando su etiqueta:
+
+```php
+<x-alert type="error" class="mb-4">
+    <x-slot name="heading">
+        Alert content...
+    </x-slot>
+
+    Default slot content...
+
+```
+
+Como mencionamos, esto es solo un pequeño ejemplo de la reforma de funcionalidad a los componentes de Blade en Laravel 6 y no llega a demostrar componentes anónimos, en línea, y otras características. Por favor consulta la [documentación completa de Blade](https://laravel.com/docs/7.x/blade#components) para aprender más.
+
+La sintáxis `@component` para componentes Blade no se removió ni se removerá.
+
+## Cliente HTTP
+
+Laravel ahora provee un API mínima y expresiva alrededor del cliente HTTP Guzzle, permitiendo hacer peticiones HTTP rápidamente para comunicarse con otras aplicaciones web. El wrapper de Laravel alrededor de [Guzzle](http://docs.guzzlephp.org/en/stable/) está enfocado en los casos más comunes y es una excelente experiencia para el desarrollador. Por ejemplo, el cliente hace muy fácil hacer un POST a una interfaz con datos en json:
+
+```php
+use Illuminate\Support\Facades\Http;
+
+$response = Http::withHeaders([
+    'X-First' => 'foo',
+    'X-Second' => 'bar'
+])->post('http://test.com/users', [
+    'name' => 'Taylor',
+]);
+
+return $response['id'];
+
+```
+
+Además, el cliente HTTP provee simplicidad a la hora de testear:
+
+```php
+Http::fake([
+    // Stub a JSON response for GitHub endpoints...
+    'github.com/*' => Http::response(['foo' => 'bar'], 200, ['Headers']),
+
+    // Stub a string response for Google endpoints...
+    'google.com/*' => Http::response('Hello World', 200, ['Headers']),
+
+    // Stub a series of responses for Facebook endpoints...
+    'facebook.com/*' => Http::sequence()
+                            ->push('Hello World', 200)
+                            ->push(['foo' => 'bar'], 200)
+                            ->pushStatus(404),
+]);
+
+```
+
+Para aprender más sobre todas las características del cliente HTTP, por favor consultar la documentación.
+
+## Operaciones fluidas con Strings
+
+Seguramente estes familiarizado con la clase Illuminate\Support\Str, que provee una variedad de operaciones de manipulación de strings. Laravel 7 ahora ofrece un enfoque más orientado a objetos, con manipulaciones de strings declaradas de forma fluida. Puedes crear tu objeto Illuminate\Support\Stringable de forma fluida con el método `Str::of`. Una variedad de métodos pueden ser encadenados al objeto para manipular el string:
+
+```php
+return (string) Str::of('  Laravel Framework 6.x ')
+                    ->trim()
+                    ->replace('6.x', '7.x')
+                    ->slug();
+
+```
+
+Para más información en los métodos disponibles a través de manipulación de strings de forma fluida, por favor consulte la [documentación completa](https://laravel.com/docs/7.x/helpers#fluent-strings).
+
+## Mejoras en Route Model Binding
+
+#### Personalización de clave
+
+Algunas veces puedes querer resolver modelos de Eloquent usando otra columna que la de `id`. Para hacer eso, Laravel 7 permite specificar la columna directamente en el parámetro de la ruta:
+
+```php
+Route::get('api/posts/{post:slug}', function (App\Post $post) {
+    return $post;
+});
+
+```
+
+#### Alcance automático
+
+A veces, cuando se enlazan múltiples modelos Eloquent en una misma definición de ruta, puedes querer limitar el alcance del segundo modelo Eloquent de tal forma que sea un hijo del primer modelo Eloquent. Por ejemplo, consideremos la situación en la que obtienes un post por slug de un usuario específico:
+
+```php
+use App\Post;
+use App\User;
+
+Route::get('api/users/{user}/posts/{post:slug}', function (User $user, Post $post) {
+    return $post;
+});
+
+```
+
+Laravel 7 automáticamente limita el alcance de la consulta para obtener el modelo anidado, usando convenciones para adivinar la relación con el padre. En este caso, asume que el modelo `User` tiene una relación `posts` (el plural del parametro de ruta) que puede usarse para obtener el modelo `Post`.
+
+Para más información en Route Model Binding, por favor consulte la [documentación](https://laravel.com/docs/7.x/routing#route-model-binding).
+
+#### Múltiples drivers para mails
+
+Laravel 7 permite la configuración de múltiples "mailers" para una misma aplicación.
+
+Cada "mailer" se puede configurar por separado y pueden tener su propio "transporte", permitiendo a tu aplicación utilizar diferentes servicios para distintos tipos de mensajes. Por ejemplo, tu aplicación puede usar Postmark para mandar mails transaccionales, mientras usa Amazon SES para enviar mails masivos.
+
+Por defecto, Laravel utiliza el `mailer` configurado como `default` en tu configuración de `mail`. Sin embargo, puedes usar el método `mailer` para enviar un mensaje usando un mailer en particular:
+
+```php
+Mail::mailer('postmark')
+        ->to($request->user())
+        ->send(new OrderShipped($order));
+
+```
+
+#### Mejoras en la velocidad de enrutamiento
+
+Laravel 7 incluye un método para matchear rutas compiladas a través del comando `route:cache`. En aplicaciones grandes (por ejemplo, con 800 rutas o más), estas mejoras pueden **duplicar** las peticiones por segundo de una aplicación "Hello World" de prueba. No es necesario aplicar cambios a tus aplicaciones.
+
+#### Soporte para CORS
+
+Laravel 7 incluye soporte de primera mano para configurar respuestas a peticiones Cross-Origin Resource Sharing (CORS) `OPTIONS` integrando el popular paquete Laravel CORS de Barry vd. Heuvel. Un nuevo archivo de configuración para `cors` está incluido por defecto en las aplicaciones de Laravel.
+
+Para más información, por favor consulta la [documentación de CORS](https://laravel.com/docs/7.x/routing#cors).
+
+#### Query Time Casts
+
+A veces se necesita aplicar conversiones mientras ejecutamos una query, como cuando seleccionamos un valor crudo de una tabla. Por ejemplo, consideremos la siguiente query:
+
+```php
+use App\Post;
+use App\User;
+
+$users = User::select([
+    'users.*',
+    'last_posted_at' => Post::selectRaw('MAX(created_at)')
+            ->whereColumn('user_id', 'users.id')
+])->get();
+
+```
+
+El atributo `last_posted_at` en los resultados de la query será un string crudo. Puede ser conveniente se pudieramos aplicar una conversión a `date` al atributo mientras ejecutamos la query. Para lograr esto, podemos usar el método `withCasts` provisto por Laravel 7:
+
+```php
+$users = User::select([
+    'users.*',
+    'last_posted_at' => Post::selectRaw('MAX(created_at)')
+            ->whereColumn('user_id', 'users.id')
+])->withCasts([
+    'last_posted_at' => 'date'
+])->get();
+
+```
+
+#### Mejoras en el driver Database para queues
+
+En versiones anteriores de Laravel, el driver `database` para queues no era considerado robusto para usar en producción, debido a los deadlocks. Sin embargo, Laravel 7 provee mejoras a aplicaciones usando queues con bases de datos MySQL 8+ como driver. Utilizando la clausula `FOR UPDATE SKIP LOCKED` y otras mejoras de SQL, el driver `database` ahora puede usarse de forma segura en aplicaciones de producción con alto volumen.
+
+#### Comando `test` de Artisan
+
+Además del comando `phpunit`, ahora puedes usar el comando `test` de Artisan para correr tus tests. Este comando provee una hermosa experiencia de usuario en la consola, y más información correspondiente al test que se está corriendo. Adicionalmente, el comando frena automáticamente en la primer falla:
+
+```none
+php artisan test
+
+```
+
+*[Imagen: captura del comando artisan test mostrando la salida en consola]*
+
+Todo argumento que puede pasarse a `phpunit` puede también pasarse al comando `test` de Artisan:
+
+```none
+php artisan test --group=feature
+
+```
+
+#### Personalización de Stubs
+
+El comando `make` de Artisan permiten crear una variedad de clases, como Controllers, Jobs, Migrations y Tests. Estas clases son generadas usando archivos "stub" que son pre-cargados con los valores que se ingresan. Sin embargo, a veces es necesario realizar pequeños cambios en los archivos generados por Artisan. Para lograr esto, Laravel 7 provee un comando `stub:publish` para publicar los stubs más comunes para su personalización:
+
+```none
+php artisan stub:publish
+
+```
+
+Los stubs publicados se encuentran en el directorio `stubs` en la raíz de la aplicación. Cualquier cambio que se hagan a esos stubs será reflejado cuando generes la clase correspondiente usando el comando `make` de Artisan.
+
+#### Queue `maxExceptions` Configuration
+
+A veces puedes necesitar que un `job` específico se ejecute muchas veces, pero que debería fallar si los reintentos son activados por un número dado de excepciones. En Laravel 7, puedes definir `maxExceptions` como propiedad en la clase de tu `job`:
+
+```php
+<?php
+
+namespace App\Jobs;
+
+class ProcessPodcast implements ShouldQueue
+{
+    /**
+     * The number of times the job may be attempted.
+     *
+     * @var int
+     */
+    public $tries = 25;
+
+    /**
+     * The maximum number of exceptions to allow before failing.
+     *
+     * @var int
+     */
+    public $maxExceptions = 3;
+
+    /**
+     * Execute the job.
+     *
+     * @return void
+     */
+    public function handle()
+    {
+        Redis::throttle('key')->allow(10)->every(60)->then(function () {
+            // Lock obtained, process the podcast...
+        }, function () {
+            // Unable to obtain lock...
+            return $this->release(10);
+        });
+    }
+}
+```
+
+En este ejemplo, el `job` es liberado por diez segundos si la aplicación es incapaz de obtener un cerrojo de Redis y continuará hasta que se haya reintentado 25 veces. Sin embargo, el `job` fallará si tres excepciones no manejadas son arrojadas por el mismo.

@@ -1,0 +1,120 @@
+---
+title: "Laravel Passport, o como crear tu propio servidor OAuth 2"
+slug: "laravel-passport-o-como-crear-tu-propio-servidor-oauth-2"
+date: "2016-11-17"
+featured: false
+featureImage: "/content/images/2016/11/Laravel-Login-Authentication-Banner.jpg"
+excerpt: "Laravel 5.3 vino cargado de excelentes nuevas features, entre las cuales están:"
+tags:
+  - "laravel"
+  - "passport"
+  - "oauth"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Laravel 5.3 vino cargado de excelentes nuevas features, entre las cuales están:
+
+- [Notificaciones](/notificaciones-con-laravel-5-3/)
+
+- [Mailables](/enviar-mail-de-bienvenida-con-laravel-5-3-mailables/)
+
+- [Almacenamiento sencillo de archivos](/nuevas-opciones-de-almacenamiento-con-laravel-5-3/)
+
+- **Laravel Passport**
+
+- **Laravel Scout**
+
+- **La variable $loop**
+
+Los primeros tres ya los hemos cubierto en otros posts de este mismo blog, y hoy paso a traerles un nuevo integrante, [Laravel Passport](https://laravel.com/docs/5.3/passport).
+
+### Qué es Laravel Passport?
+
+Passport es un paquete oficial de Laravel para integrar fácilmente un servidor OAuth 2 a tu aplicación de Laravel.
+
+Tradicionalmente, instalar y configurar un paquete de OAuth 2, o implementarlo manualmente, ha sido un verdadero dolor de cabeza, pero por suerte, Taylor Otwell, creador de Laravel, armó para la versión 5.3, un paquete independiente que permite integrar rápidamente las funcionalidades de OAuth en nuestra aplicación.
+
+### Integrando Laravel Passport a nuestra aplicación
+
+Para empezar, Passport es un paquete externo al core del framework, por lo que debemos requerirlo con Composer:
+
+```php
+composer require laravel/passport
+
+```
+
+Una vez que terminó de instalarse, podemos agregarlo a nuestro archivo `app.php` como un ServiceProvider:
+
+```php
+Laravel\Passport\PassportServiceProvider::class,
+
+```
+
+Ahora ya podremos realizar la migración, que contiene las tablas necesarias para generar clientes, tokens y demás.
+
+```php
+php artisan migrate
+
+```
+
+Luego, tenemos que utilizar el siguiente comando para que Passport genere dos claves RSA que utilizará para encriptar nuestros tokens, y además creará dos clientes nuevos, uno para Personal Access Tokens y otro para Password Grants.
+
+```php
+php artisan passport:install
+
+```
+
+Si vamos a crear tokens para aplicaciones propias (first-party), hasta aquí está bien, pero si queremos realizar algo parecido a Github, donde nuestros usuarios pueden registrar aplicaciones y que esas aplicaciones se conecten con la nuestra, necesitamos generar clientes nuevos asociados con esos usuarios.
+
+Para que los usuarios de tu aplicación puedan solicitar tokens, tienes que agregarle el Trait `HasApiTokens` al Model para que quede así:
+
+```php
+class User extends Authenticatable
+{
+    use HasApiTokens, Notifiable;
+}
+
+```
+
+Después, tenemos que agregar a nuestro `AuthServiceProvider` el siguiente método para registrar las rutas de Passport:
+
+```php
+    public function boot()
+    {
+        $this->registerPolicies();
+
+        Passport::routes();
+    }
+
+```
+
+Por último, tenemos que determinar en nuestro archivo `session.php` que utilizaremos el driver de Passport para las sesiones de nuestro API:
+
+```php
+    'api' => [
+        'driver' => 'passport',
+        'provider' => 'users',
+    ],
+
+```
+
+Con eso ya queda configurado nuestro servidor para recibir peticiones de acceso con OAuth y entregar tokens de acceso.
+
+Passport además propone una implementación frontend en Vue.js con componentes que permiten visualizar, consumir y generar clientes OAuth.
+
+Puede utilizarse o pueden crear sus propias implementaciones que choquen contra el backend.
+
+### Muy lindo todo, pero para qué?
+
+Ahora que tenemos integrado nuestro servidor OAuth en nuestra aplicación, que conseguimos?
+
+- Permitimos a otras aplicaciones que se integren la nuestra de forma segura.
+
+- Podemos desarrollar aplicaciones nuestras que se integren con nuestra versión actual, manteniendo un mismo punto de acceso (nuestro API) para todas, y que manejen de forma sencilla y segura la autenticación.
+
+*Un saludo y espero que les haya resultado de utilidad!*

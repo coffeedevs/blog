@@ -1,0 +1,75 @@
+---
+title: "La importancia de los certificados SSL en nuestros sitios web"
+slug: "ventajas-de-https-en-nuestros-sitios-web"
+date: "2016-10-07"
+featured: false
+featureImage: "/content/images/2016/10/HTTPS_icon.png"
+excerpt: "Cuando estamos navegando por Internet, toda la información que se envía o se"
+tags:
+  - "web"
+  - "seguridad"
+  - "https"
+  - "forge"
+  - "http2"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Cuando estamos navegando por Internet, toda la información que se envía o se recibe está dada por un protocolo de comunicación, **HTTP**, **FTP**, etc.
+
+En una conexión normal el protocolo que se suele utilizar es **HTTP**, donde todos los datos viajan sin ningún tipo de cifrado.  En cambio, en otros sitios con características diferentes, nos podemos encontrar con el protocolo **HTTPS**, donde la información viaja totalmente cifrada.
+
+#### ¿Qué beneficios trae el uso de HTTPS?
+
+Existen diferentes tipos de sitios que manejan **datos importantes de los clientes**, los cuales podrían ser perjudiciales si fueran a **caer en las manos equivocadas**.  Esto va a depender del tipo de negocio y de la página web.
+
+Por ejemplo, tenemos sitios web que funcionan como tiendas en línea que recopilan números de tarjetas de crédito, direcciones, correos electrónicos, números de teléfono, etc.  Si toda esta información fuera enviada sin ningún tipo de cifrado, podría ser **interceptada y usada fácilmente**.
+
+Para evitar esto **debemos usar el protocolo HTTPS** logrando que dicha información no pueda ser interpretada en caso de ser capturada.
+
+Esto se logra encriptando la conexión entre nuestro sitio y los usuarios a través del protocolo [TLS](https://es.wikipedia.org/wiki/Transport_Layer_Security) (Transport Layer Security), sucesor del protocolo SSL (Secure Sockets Layer), que cifra los datos que se envían a través de él para reducir el impacto de terceros escuchando en el medio de nuestra comunicación ([ataque Man in the middle](https://es.wikipedia.org/wiki/Ataque_de_intermediario)).
+
+Otra característica que nos ofrecen los certificados **SSL/TLS**, es la certeza de que el servidor al cual nos estamos conectando es quien dice ser.
+
+Además, al poder servir nuestro sitio por **HTTPS** nos permite utilizar el protocolo **[HTTP 2.0](https://es.wikipedia.org/wiki/HTTP/2)**, lo que trae muchísimas mejoras en cuanto a la [performance](https://http2.akamai.com/demo).[[1]](#fn1)
+
+#### ¿Donde y cuando se justifica utilizar HTTPS?
+
+Anteriormente, solo era un requisito para sitios que manejaran información muy importante como tarjetas de crédito, datos de seguridad social, información clasificada, etc.
+
+Hoy por hoy, se la recomienda para cualquier sitio que maneja información sensible de sus usuarios, y se está expandiendo su uso a todos los sitios, con la meta siendo **HTTPS Everywhere**.
+
+**Google** ha declarado que el hecho de servir un sitio en **HTTPS** mejora su ranking en el buscador, y que en un futuro, los sitios que no implementen **HTTPS** pasarán a tener un candado rojo en la barra de direcciones para indicar que el sitio maneja la información de manera insegura.
+
+Si esto no fuera suficiente, la tranquilidad que le damos a nuestros usuarios al proteger sus datos debería ser más que suficiente para decidirnos a utilizar **HTTPS**.
+
+#### ¿Cómo conseguir un certificado SSL/TLS para nuestro sitio?
+
+Hasta unos pocos meses atrás, la única forma de conseguir un certificado **SSL/TLS** era contratar una compañía que funcionara como [Autoridad Certificante](https://es.wikipedia.org/wiki/Autoridad_de_certificaci%C3%B3n) y que nos licenciara un certificado autorizado por ellos, con un costo anual o mensual basado en la cantidad de dominios y subdominios a certificar.
+
+Todo esto cambio con la iniciativa [Let's Encrypt](https://letsencrypt.org/), que genera certificados de forma gratuita, lo que permite a todos los sitios proveer **HTTPS** de forma gratuita.
+
+Muchos proveedores de hosting hoy por hoy permiten utilizar **Let's Encrypt** para instalar certificados **SSL**, y sino, podemos utilizar la aplicación [CertBot](https://certbot.eff.org/) de **Let's Encrypt** para realizar el proceso nosotros mismos.
+
+En nuestro caso, utilizamos [Laravel Forge](http://forge.laravel.com/) para provisionar nuestro servidores e instalar certificados **SSL** en nuestros servidores, de forma muy simple y en tan solo dos clicks.
+
+**Forge** automáticamente redirige todas las peticiones a nuestro sitio **HTTP** a nuestro sitio **HTTPS**, pero si estás utilizando tu propia solución, puedes agregar este *snippet* a tu `vhost` de Apache o al .`htaccess` para que redirija todo a tu versión **HTTPS**:
+
+```apache
+RewriteEngine on
+RewriteCond %{HTTPS} off
+RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+
+```
+
+Eso es todo por ahora, espero que les haya sido de utilidad, y que tengan en cuenta de migrar su sitio de HTTP a HTTPS si todavía no lo hicieron.
+
+Todos los sitios de [CoffeeDevs](http://coffeedevs.com) están migrándose a utilizar **HTTPS** por defecto, así como **HTTP 2.0****, [nginx](https://nginx.org/), y demás optimizaciones para hacer de la web un lugar más seguro y agradable :)
+
+---
+
+1. No hay ningún requerimiento técnico para que HTTP 2.0 funcione con HTTPS, pero los navegadores más comunes exigen una conexión segura para trabajar con HTTP 2.0 [↩︎](#fnref1)

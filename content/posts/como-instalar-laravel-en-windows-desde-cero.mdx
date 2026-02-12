@@ -1,0 +1,117 @@
+---
+title: "Cómo instalar Laravel en Windows desde cero"
+slug: "como-instalar-laravel-en-windows-desde-cero"
+date: "2017-07-31"
+featured: false
+featureImage: "/content/images/2017/07/7edabb8b2b6a0f67aa915fd8bc99bb4f.jpg"
+excerpt: "En este tutorial veremos cómo instalar PHP, Composer y Laravel desde cero, algo"
+tags:
+  - "laravel"
+  - "laragon"
+  - "instalar"
+  - "nuevo"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+En este tutorial veremos cómo instalar PHP, Composer y Laravel desde cero, algo que para muchos resulta ser un gran obstáculo a la hora de iniciarse en este excelente framework.
+
+## Instalando PHP
+
+Para instalar PHP en Windows tenemos varias herramientas, cada una con distintos beneficios.
+
+En una oportunidad anterior, les explicamos como instalar una de ellos: [Laragon](/laragon-laravel-valet-para-windows/).
+
+Es tan simple como entrar a [su página](https://laragon.org/), descargar el paquete [WAMP](https://sourceforge.net/projects/laragon/files/releases/3.1/laragon-wamp.exe) (Windows, Apache, MySQL, PHP) y ejecutar el instalador.
+
+Elegimos la ruta donde se instalará Laragon, y luego el instalador asociará PHP a nuestras variables de entorno (PATH) para que podamos usarlo desde consola.
+
+Una de las ventajas de Laragon vs [Xampp](https://www.apachefriends.org/es/index.html) o [Wamp](http://www.wampserver.es/) es que instalar proyectos Laravel es muy sencillo, ya que tiene una opción específica para eso, que genera un nuevo proyecto Laravel con todos los paquetes instalados, el archivo `.env` creado, un Virtual Host para **Apache** o **nginx** configurado con el nombre del proyecto para que podamos acceder rápidamente en nuestro navegador ([http://ejemplo.dev](http://ejemplo.dev)) y hasta puede generar una base de datos para el proyecto, todo desde un fácil acceso rápido en la barra de tareas.
+
+Una vez instalado alguno de estos entornos, ya sea Laragon, Xampp, Wamp o cualquier otro, podremos comprobar que PHP se instaló correctamente comprobando por consola su versión:
+
+```
+php -v
+
+```
+
+Si PHP se instaló con éxito, debería mostrarnos algo similar a esto:
+
+```
+PHP 7.0.11 (cli) ( NTS )
+Copyright (c) 1997-2016 The PHP Group
+Zend Engine v3.0.0, Copyright (c) 1998-2016 Zend Technologies
+    with Zend OPcache v7.0.11, Copyright (c) 1999-2016, by Zend Technologies
+
+```
+
+Es importante instalar las versiones de PHP 7+, ya que las versiones 5 de PHP han quedado discontinuadas y muchos paquetes requieren de la última versión para ejecutarse.
+
+## Instalando Composer
+
+**Composer** es el manejador de dependencias de PHP, es decir, se encarga de instalar las librerias que nuestros proyectos necesitan y de mantenerlas actualizadas, por lo que podemos reutilizar código de otros programadores en nuestras aplicaciones y ahorrarnos reescribir siempre las mismas funcionalidades.
+
+PHP tuvo un antes y un después de la aparición de Composer, ya que permitió que la comunidad desarrollara paquetes especializados y que estos fueran probados por miles de aplicaciones, ahorrando tiempo a futuros programadores y mejorando la estabilidad de nuestros sistemas.
+
+Para instalar Composer en Windows, debemos descargarlo desde su página:
+
+[https://getcomposer.org/Composer-Setup.exe](https://getcomposer.org/Composer-Setup.exe)
+
+Luego, ejecutamos el instalador y seguimos sus pasos:
+
+![Composer setup](http://codezag.com/wp-content/uploads/2015/02/composer-2.png)
+
+Una vez terminado, podemos abrir una consola de Windows y ejecutar `composer`. Si todo salió bien, nos mostrará una lista de comandos para ejecutar.
+
+![Comandos Composer](/content/images/2017/07/1491890237Composer1.jpg)
+
+Más adelante veremos cómo utilizar Composer para manejar las dependencias de nuestras aplicaciones.
+
+Ahora ya podemos pasar a crear nuestro primer proyecto!
+
+## Creando nuestro primer proyecto
+
+Para crear un nuevo proyecto en Laravel, tenemos dos formas (tres con Laragon):
+
+- Utilizando composer
+
+```text
+php -v
+```
+
+- Utilizando el instalador de Laravel (más rápido)
+
+```text
+PHP 7.0.11 (cli) ( NTS )
+Copyright (c) 1997-2016 The PHP Group
+Zend Engine v3.0.0, Copyright (c) 1998-2016 Zend Technologies
+    with Zend OPcache v7.0.11, Copyright (c) 1999-2016, by Zend Technologies
+```
+
+- Utilizando el acceso rápido de Laragon
+
+![Laragon: acceso rápido](/content/images/2017/07/laragon.png)
+
+Estos comandos generarán una carpeta `nuevo-proyecto` que tendrá la instalación básica del framework.
+
+Si lo creamos con `composer`, tendremos que copiar el archivo `.env.example` a `.env` y generar una clave nueva para el proyecto:
+
+```php
+copy .env.example .env
+php artisan key:generate
+
+```
+
+Si lo creamos con el instalador de Laravel o de Laragon, **esto se hará automáticamente**.
+
+Ahora sí, ya podemos abrir la ventana de nuestro navegador y ver el inicio de nuestra nueva app.
+
+Entremos a [http://nuevo-proyecto.dev](http://nuevo-proyecto.dev) y veremos esto:
+
+![](/content/images/2017/07/welcome-page.png)
+
+Eso fue todo, espero que les haya servido!

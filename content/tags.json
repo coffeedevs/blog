@@ -1,0 +1,286 @@
+[
+  {
+    "name": "programacion",
+    "slug": "programacion"
+  },
+  {
+    "name": "servidores",
+    "slug": "servidores"
+  },
+  {
+    "name": "laravel",
+    "slug": "laravel"
+  },
+  {
+    "name": "apache",
+    "slug": "apache"
+  },
+  {
+    "name": "nginx",
+    "slug": "nginx"
+  },
+  {
+    "name": "php",
+    "slug": "php"
+  },
+  {
+    "name": "startups",
+    "slug": "startups"
+  },
+  {
+    "name": "optimizacion",
+    "slug": "optimizacion"
+  },
+  {
+    "name": "mercadopago",
+    "slug": "mercadopago"
+  },
+  {
+    "name": "digitalocean",
+    "slug": "digitalocean"
+  },
+  {
+    "name": "vps",
+    "slug": "vps"
+  },
+  {
+    "name": "hosting",
+    "slug": "hosting"
+  },
+  {
+    "name": "tips",
+    "slug": "tips"
+  },
+  {
+    "name": "blade",
+    "slug": "blade"
+  },
+  {
+    "name": "5.2",
+    "slug": "5-2"
+  },
+  {
+    "name": "eloquent",
+    "slug": "eloquent"
+  },
+  {
+    "name": "sql",
+    "slug": "sql"
+  },
+  {
+    "name": "orm",
+    "slug": "orm"
+  },
+  {
+    "name": "entorno",
+    "slug": "entorno"
+  },
+  {
+    "name": "laragon",
+    "slug": "laragon"
+  },
+  {
+    "name": "marketing",
+    "slug": "marketing"
+  },
+  {
+    "name": "soporte",
+    "slug": "soporte"
+  },
+  {
+    "name": "visibilidad",
+    "slug": "visibilidad"
+  },
+  {
+    "name": "conversion",
+    "slug": "conversion"
+  },
+  {
+    "name": "chat",
+    "slug": "chat"
+  },
+  {
+    "name": "tawkto",
+    "slug": "tawkto"
+  },
+  {
+    "name": "git",
+    "slug": "git"
+  },
+  {
+    "name": "deployment",
+    "slug": "deployment"
+  },
+  {
+    "name": "development",
+    "slug": "development"
+  },
+  {
+    "name": "gitkraken",
+    "slug": "gitkraken"
+  },
+  {
+    "name": "gui",
+    "slug": "gui"
+  },
+  {
+    "name": "trello",
+    "slug": "trello"
+  },
+  {
+    "name": "productividad",
+    "slug": "productividad"
+  },
+  {
+    "name": "organizacion",
+    "slug": "organizacion"
+  },
+  {
+    "name": "ristretto",
+    "slug": "ristretto"
+  },
+  {
+    "name": "compresion",
+    "slug": "compresion"
+  },
+  {
+    "name": "web",
+    "slug": "web"
+  },
+  {
+    "name": "application",
+    "slug": "application"
+  },
+  {
+    "name": "cambios",
+    "slug": "cambios"
+  },
+  {
+    "name": "español",
+    "slug": "espanol"
+  },
+  {
+    "name": "email",
+    "slug": "email"
+  },
+  {
+    "name": "5.3",
+    "slug": "5-3"
+  },
+  {
+    "name": "tutorial",
+    "slug": "tutorial"
+  },
+  {
+    "name": "archivos",
+    "slug": "archivos"
+  },
+  {
+    "name": "uploads",
+    "slug": "uploads"
+  },
+  {
+    "name": "seguridad",
+    "slug": "seguridad"
+  },
+  {
+    "name": "https",
+    "slug": "https"
+  },
+  {
+    "name": "forge",
+    "slug": "forge"
+  },
+  {
+    "name": "http2",
+    "slug": "http2"
+  },
+  {
+    "name": "notificaciones",
+    "slug": "notificaciones"
+  },
+  {
+    "name": "mailtrap",
+    "slug": "mailtrap"
+  },
+  {
+    "name": "composer",
+    "slug": "composer"
+  },
+  {
+    "name": "yarn",
+    "slug": "yarn"
+  },
+  {
+    "name": "npm",
+    "slug": "npm"
+  },
+  {
+    "name": "packages",
+    "slug": "packages"
+  },
+  {
+    "name": "passport",
+    "slug": "passport"
+  },
+  {
+    "name": "oauth",
+    "slug": "oauth"
+  },
+  {
+    "name": "5.4",
+    "slug": "5-4"
+  },
+  {
+    "name": "dusk",
+    "slug": "dusk"
+  },
+  {
+    "name": "intervention",
+    "slug": "intervention"
+  },
+  {
+    "name": "cache",
+    "slug": "cache"
+  },
+  {
+    "name": "helpers",
+    "slug": "helpers"
+  },
+  {
+    "name": "instalar",
+    "slug": "instalar"
+  },
+  {
+    "name": "nuevo",
+    "slug": "nuevo"
+  },
+  {
+    "name": "transformers",
+    "slug": "transformers"
+  },
+  {
+    "name": "api",
+    "slug": "api"
+  },
+  {
+    "name": "telescope",
+    "slug": "telescope"
+  },
+  {
+    "name": "debugging",
+    "slug": "debugging"
+  },
+  {
+    "name": "5.7",
+    "slug": "5-7"
+  },
+  {
+    "name": "6.0",
+    "slug": "6-0"
+  },
+  {
+    "name": "9",
+    "slug": "9"
+  }
+]

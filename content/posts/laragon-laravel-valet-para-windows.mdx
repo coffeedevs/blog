@@ -1,0 +1,81 @@
+---
+title: "Laragon -  Una excelente alternativa a XAMPP para Windows"
+slug: "laragon-laravel-valet-para-windows"
+date: "2016-05-23"
+featured: false
+featureImage: "/content/images/2016/05/728px-Laragon-org-1.png"
+excerpt: "Mejorar nuestro entorno"
+tags:
+  - "laravel"
+  - "php"
+  - "entorno"
+  - "laragon"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+### Mejorar nuestro entorno
+
+Un buen entorno de desarrollo es crucial para mantenernos productivos, sobretodo cuando manejamos varios proyectos a la vez.
+
+Cuando trabajamos con [Laravel](https://laravel.com/), como hacemos en [CoffeeDevs](http://coffeedevs.com), es muy común utilizar `php artisan serve`para servir nuestros sitios, pero esto suele traer algunas complicaciones requerir escenarios más complejos:
+
+1- Primero, para tener dos proyectos abiertos, necesitamos servirlos en distintos puertos.
+
+2- Al ser **PHP** single-threaded, un script ejecutándose nos evita interactuar con nuestro sitio por más que abramos 2 o más pestañas.
+
+3- Cambiar de versión de **PHP** es muy molesto.
+
+4- Visitar un proyecto que tenemos cerrado significa que tenemos que ir al directorio del proyecto y ejecutar `php artisan serve`, o peor, tener que elegir el puerto y abrir una pestaña nueva con algo como `localhost:8018`
+
+Para solucionar varios de estos problemas, [XAMPP](https://www.apachefriends.org/es/index.html) es una excelente solución, al utilizar el servidor web Apache para servir los sitios, nos permite resolver los puntos 1,2 y 4 de forma sencilla. Cambiar de versión de **PHP** sigue siendo igual de complicado.
+
+Si bien **XAMPP** es una excelente herramienta, la estructura de directorios y rutas que usamos para acceder a un proyecto de **Laravel** es bastante compleja:
+
+```batch
+C:\xampp\htdocs\laravel\public
+
+```
+
+Y en el navegador:
+
+```batch
+localhost/laravel/public
+
+```
+
+*No sería mucho mejor poder hacer `laravel.dev` y entrar directamente?*
+
+Y que al crear otro proyecto nuevo, podamos hacer instántaneamente `nuevo-proyecto.dev` en nuestro navegador y ya esté todo funcionando?
+
+Bueno, exactamente eso es Laragon!
+
+### ¿Qué es Laragon y para qué sirve?
+
+[Laragon](http://laragon.org) es un WAMP (Windows, Apache, Mysql/MariaDB, PHP) server, orientado a **Laravel**.
+
+Con permisos de administrador, tiene la opción de crear VHosts automáticamente para todos los proyectos que viven en la carpeta raíz (laragon/www), de forma tal que para el proyecto **prueba-laravel**  basta con entrar a `prueba-laravel.dev`.
+
+Tiene la facilidad de poder cambiar entre la versión **5.6** y la **7.0** de **PHP**, por lo que podemos hacer pruebas sencillas sobre velocidad o sintaxis en las distintas versiones!
+
+Y, obviamente, al estar servido con **Apache**, podemos abrir varios proyectos a la vez, ejecutar operaciones largas sin que se bloquee el resto de los pedidos, etc.
+
+La consola de Laragon está cargada con **git**, **Composer**, **node**, **npm**, los comandos `ll`y `ls` y es fácilmente accesible con el atajo **Ctrl + Alt + T**.
+
+Además, está preparado para integrarse fácilmente con **Redis**, **memcached**, y es fácilmente configurable si los parámetros por default no te gustan.
+
+Ah, y dije que todo esto es **portable** y **no interfiere con el sistema operativo**? Así que carga tu pendrive con la carpeta de Laragon y llevalo a donde quieras.
+
+*Demasiado bueno para ser cierto?*
+
+### Descargalo y probalo ya!
+
+Es tan fácil como instalarlo con un par de clicks, iniciar el servidor, y usando su menú contextual, crear un proyecto nuevo de Laravel 4, 5 o Lumen.
+
+**Listo?** Ya está servido en nombre.dev, ahora a programar!
+
+PD: Si tu entorno de desarrollo es Mac, [Laravel Valet](https://laravel.com/docs/5.2/valet) es la solución que buscas!

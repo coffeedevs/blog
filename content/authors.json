@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Facundo Goñi",
+    "slug": "facundo",
+    "bio": null,
+    "website": "https://facundogoni.com.ar/",
+    "twitter": "@gonifacundo",
+    "avatar": "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+  },
+  {
+    "name": "Ghost",
+    "slug": "ghost",
+    "bio": "You can delete this user to remove all the welcome posts",
+    "website": null,
+    "twitter": null,
+    "avatar": null
+  },
+  {
+    "name": "Staff",
+    "slug": "staff",
+    "bio": null,
+    "website": null,
+    "twitter": null,
+    "avatar": null
+  },
+  {
+    "name": "Martín Guadalupe",
+    "slug": "martin",
+    "bio": null,
+    "website": null,
+    "twitter": null,
+    "avatar": null
+  }
+]

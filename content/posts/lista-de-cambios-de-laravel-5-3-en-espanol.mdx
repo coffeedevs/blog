@@ -1,0 +1,340 @@
+---
+title: "Lista de cambios de Laravel 5.3 en Español"
+slug: "lista-de-cambios-de-laravel-5-3-en-espanol"
+date: "2016-08-24"
+featured: false
+featureImage: "/content/images/2016/08/laravel-5-3.png"
+excerpt: "Lo nuevo"
+tags:
+  - "laravel"
+  - "cambios"
+  - "español"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+### Lo nuevo
+
+[Laravel 5.3](https://laravel.com/docs/5.3) continua con las mejoras hechas en Laravel 5.2, agregando un [sistema de notificaciones](https://laravel.com/docs/5.3/notifications) basado en controladores, soporte para tiempo real robusto via [Laravel Echo](https://laravel.com/docs/5.3/broadcasting), servidores OAuth2 sin problemas via [Laravel Passport](https://laravel.com/docs/5.3/passport), busqueda de texto completo para modelos con [Laravel Scout](https://laravel.com/docs/5.3/scout), soporte para Webpack en Laravel Elixir, objetos "mailables", separación explicita de rutas `web` y `api`, comandos de consola con Closures, convenientes `helpers` para guardar archivos subidos, soporte para POPOs y controladores de una sola acción, mejoras para el scaffolding frontend y mucho más.
+
+### Notificaciones
+
+[Link al video tutorial de Laracasts](https://laracasts.com/series/whats-new-in-laravel-5-3/episodes/13)
+
+Notificaciones de Laravel proveen una API simple, expresiva para mandar notificaciones a través de una variedad de canales de distribución como Email, Slack, SMS y más. Por ejemplo, puedes definir una notificación de una factura que ha sido pagada y entregar esa notificación por Email y SMS. Luego, puedes enviar una notificación usando un simple método:
+
+```php
+$user->notify(new InvoicePaid($invoice));
+
+```
+
+Ya hay una gran variedad de [controladores escritos por la comunidad](http://laravel-notification-channels.com/), incluyendo soporte para notificaciones nativas en Android y iOS. Para aprender más acerca de las notificaciones, puedes revisar [la documentación completa](https://laravel.com/docs/5.3/notifications).
+
+### WebSockets / Event Broadcasting
+
+Mientras que la propagación de eventos existia en versiones anteriores de Laravel, la última entrega de Laravel mejora sustancialmente esta característica del framework, agregando autenticación por canal para canales privados y de presencia en Websockets:
+
+```php
+/*
+ * Authenticate the channel subscription...
+ */
+Broadcast::channel('orders.*', function ($user, $orderId) {
+    return $user->placedOrder($orderId);
+});
+
+```
+
+Laravel Echo, un nuevo paquete de JavaScript instalable con NPM, también ha sido liberado para proveer una API simple y elegante para suscribirse a canales y escuchar eventos del servidor en tu aplicación JavaScript en el cliente. Echo incluye soporte para [Pusher ](https://pusher.com/)y [Socket.io](http://socket.io/):
+
+```javascript
+Echo.channel('orders.' + orderId)
+    .listen('ShippingStatusUpdated', (e) => {
+        console.log(e.description);
+    });
+
+```
+
+Además de suscribirse a canales tradicionales, Laravel Echo también facilita la suscripción a canales de presencia que proveen información acerca de quién está escuchando en un canal particular:
+
+```javascript
+Echo.join('chat.' + roomId)
+    .here((users) => {
+        //
+    })
+    .joining((user) => {
+        console.log(user.name);
+    })
+    .leaving((user) => {
+        console.log(user.name);
+    });
+
+```
+
+Para aprender más de Echo y propagación de eventos, revisa [la documentación completa](https://laravel.com/docs/5.3/broadcasting).
+
+### Laravel Passport (Servidor OAuth2)
+
+[Link al video tutorial en Laracasts](https://laracasts.com/series/whats-new-in-laravel-5-3/episodes/13)
+
+Laravel 5.3 hace la autenticación por API muy sencilla con [Laravel Passport](https://laravel.com/docs/5.3/passport), que provee una implementación de servidor OAauth2 completa para tu aplicación Laravel en cuestión de minutos. Passport está construido encima del [servidor OAuth2 de la Liga del PHP Extraordinario](https://github.com/thephpleague/oauth2-server) que es mantenido por Alex Bilbie.
+
+Passport hace sencillo entregar tokens de acceso via códigos de autorización OAuth2.
+
+También puedes permitir a tus usuarios crear "tokens de acceso personal" a traves de tu interfaz web.
+
+Para ayudarte a empezar rápido, Passport incluye componentes Vue que sirven como punto de partida para tu dashboard de OAuth2, permitiendo a tus usuarios crear clientes, revocar tokens de acceso, y más:
+
+```html
+<passport-clients></passport-clients>
+<passport-authorized-clients></passport-authorized-clients>
+<passport-personal-access-tokens></passport-personal-access-tokens>
+```
+
+Si no quieres utilizar los [componentes de Vue](https://vuejs.org/), estas invitado a proveer tu propio dashboard para manejar clientes y tokens de acceso.
+
+Passport expone una api JSON simple para que puedas usar con cualquier framework Javascript que elijas.
+
+Por supuesto, Passport también hace simple definir el alcance de los tokens de acceso que pueden ser solicitados por una aplicación consumiendo tu API:
+
+```php
+Passport::tokensCan([
+    'place-orders' => 'Place new orders',
+    'check-status' => 'Check order status',
+]);
+
+```
+
+En adición, Passport incluye un middleware para verificar que una solicitud autenticada con token de acceso pertenece al rango establecido:
+
+```php
+Route::get('/orders/{order}/status', function (Order $order) {
+    // Access token has "check-status" scope...
+})->middleware('scope:check-status');
+
+```
+
+Por último, Passport incluye soporte para consumir tu propia API desde tu aplicación Javascript sin preocuparte por pasar tokens de acceso.
+
+Passport logra esto a través de cookies JWT encriptadas y tokens CSRF sincronizadas, permitiendote enfocarte en lo que importa: tu aplicación.
+
+Para más información sobre Passport, no te olvides revisar [la documentación completa](https://laravel.com/docs/5.3/passport).
+
+### Búsqueda (Laravel Scout)
+
+Laravel Scout provee una simple solución basada en controladores para agregar búsqueda de texto completo a tus [modelos Eloquent](https://laravel.com/docs/5.3/eloquent).
+
+Usando observadores de modelos, Scout puede mantener automáticamente tus índices de búsquedas sincronizadas con tus registros Eloquent.
+
+Actualmente, Scout viene con un controlador para [Algolia](https://www.algolia.com/); sin embargo, escribir controladores personalizados es simple y eres libre de extender Scout con tus propias implementaciones de búsqueda.
+
+Hacer buscables los modelos es tan simple como agregar el trait `Searchable `al modelo:
+
+```php
+<?php
+
+namespace App;
+
+use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    use Searchable;
+}
+```
+
+Una vez que tus modelos han sido indexados, es sencillo realizar búsquedas de texto completo a través de todos tus modelos. Puedes incluso paginar los resultados:
+
+```php
+return Order::search('Star Trek')->get();
+
+return Order::search('Star Trek')->where('user_id', 1)->paginate();
+
+```
+
+Obviamente, Scout tiene muchas más características que están detalladas en [la documentación](https://laravel.com/docs/5.3/scout).
+
+### Objetos mailables
+
+[Link al video tutorial en Laracasts](https://laracasts.com/series/whats-new-in-laravel-5-3/episodes/6)
+
+Laravel 5.3 viene con soporte para objetos mailables. Estos objetos te permiten representar tus mensajes de email como simples objetos en lugar de personalizar mensajes de mail en Closures.
+
+Por ejemplo, puedes definir un simple objeto mailable para un mail de bienvenida:
+
+```php
+class WelcomeMessage extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    /**
+     * Build the message.
+     *
+     * @return $this
+     */
+    public function build()
+    {
+        return $this->view('emails.welcome');
+    }
+}
+
+```
+
+Una vez que el objeto mailable ha sido definido, puedes enviarlo a un usuario usando una API simple y expresiva.
+
+Los objetos mailables son excelentes para identificar la intención de tus mensajes cuando escaneas tu código:
+
+```php
+class WelcomeMessage extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    /**
+     * Build the message.
+     *
+     * @return $this
+     */
+    public function build()
+    {
+        return $this->view('emails.welcome');
+    }
+}
+```
+
+Obviamente, también puedes marcar objetos mailables como "encolables" así pueden enviarse a trabajadores de cola, sin bloquear el hilo de aplicación:
+
+```php
+class WelcomeMessage extends Mailable implements ShouldQueue
+{
+    //
+}
+
+```
+
+Para más información sobre objetos mailables, puedes revisar [la documentación de mail](https://laravel.com/docs/5.3/mail).
+
+### Storing Uploaded Files
+
+[Link al video tutorial de Laracasts](https://laracasts.com/series/whats-new-in-laravel-5-3/episodes/12)
+
+En aplicaciónes web, uno de los casos de uso más comunes para almacenar archivos es almacenar contenido subido por el usuario como imágenes de perfil, fotos y documentos.
+
+Laravel 5.3 hace muy fácil guardar archivos subidos por usuarios con el nuevo método `store` para archivos subidos.
+
+Simplemente llama el método `store` con la ruta donde quieres guardar el archivo:
+
+```php
+/**
+ * Update the avatar for the user.
+ *
+ * @param  Request  $request
+ * @return Response
+ */
+public function update(Request $request)
+{
+    $path = $request->file('avatar')->store('avatars', 's3');
+
+    return $path;
+}
+
+```
+
+Para más documentación sobre archivos subidos, visita [la documentación completa](https://laravel.com/docs/5.3/filesystem#file-uploads).
+
+### Webpack & Laravel Elixir
+
+Junto con Laravel 5.3, Laravel Elixir 6.0 fue liberado con soporte para los bundlers de JavaScript Webpack y Rollup.
+
+Por defecto, el archivo `gulpfile.js` de Laravel 5.3  ahora usa Webpack para compilar tu JavaScript.
+
+[La documentación de Elixir completa](https://laravel.com/docs/5.3/elixir) contiene más información acerca de estos bundlers:
+
+```php
+/**
+ * Update the avatar for the user.
+ *
+ * @param  Request  $request
+ * @return Response
+ */
+public function update(Request $request)
+{
+    $path = $request->file('avatar')->store('avatars', 's3');
+
+    return $path;
+}
+```
+
+### Estructura Frontend
+
+[Link al video tutorial de Laracasts](https://laracasts.com/series/whats-new-in-laravel-5-3/episodes/4)
+
+Laravel 5.3 viene con una estructura frontend más moderna. Esto afecta principalmente al comando de scaffolding de autenticación `make:auth`.
+
+En lugar de cargar recursos desde un CDN, las dependencias están especificadas en el `package.json` por defecto.
+
+Además, soporte para archivos únicos de [componentes Vue](https://vuejs.org/) está ahora incluido en el directorio `resoureces/assets/js/components`.
+
+Incluso, el nuevo archivo `resources/assets/js/app.js` inicia y configura tus librerias JavaScript y, de ser aplicable, tus componentes Vue.
+
+Esta estructura provee mayor guía sobre como construir aplicaciones JavaScript modernas y robustas, sin requerir que tu aplicación use ningún framework JavaScript o CSS.
+
+Para más información sobre como iniciarte con el desarrollo de frontend moderno de Laravel, revisa [la documentación introductoria de frontend.](https://laravel.com/docs/5.3/frontend)
+
+### Archivos de Rutas
+
+Por defecto, las nuevas aplicaciones de Laravel 5.3 contienen dos archivos de rutas HTTP en un nuevo nivel de directorio de rutas.
+
+Los archivos de ruta `web` y `api` proveen una guía más explicita sobre como dividir las rutas de tu interfaz web y tu API.
+
+Las rutas en el archivo `api` seran asignadas automáticamente el prefijo API como indica el RouteServiceProvider.
+
+### Closures para comandos de consola
+
+Además de ser definidos como clases de comando, los comandos de Artisan ahora pueden ser definidos por simples Closures en el método `commands` en tu archivo `app/Console/Kernel.php`.
+
+En instalaciones nuevas de Laravel 5.3, el método comando carga al archivo `routes/console.php` que permite definir tus comandos de consola como rutas, basados en Closures que sirven de puntos de entrada a tu aplicación:
+
+```javascript
+elixir(mix => {
+    mix.sass('app.scss')
+       .webpack('app.js');
+});
+```
+
+Para más información sobre los comandos con Closures, revisa [la documentación completa de Artisan.](https://laravel.com/docs/5.3/artisan#closure-commands)
+
+### La variable $loop
+
+[Link al video tutorial de Laracasts](https://laracasts.com/series/whats-new-in-laravel-5-3/episodes/7)
+
+Cuando iteramos un ciclo en un template de Blade, tendremos disponible una variable `$loop`.
+
+Esta variable provee acceso a algunos datos interesantes, como el índice actual del ciclo, y si es la primera o la última iteración:
+
+```php
+@foreach ($users as $user)
+    @if ($loop->first)
+        This is the first iteration.
+    @endif
+
+    @if ($loop->last)
+        This is the last iteration.
+    @endif
+
+    This is user {{ $user->id }}
+
+@endforeach
+
+```
+
+Para más información, consulta [la documentación de Blade.](https://laravel.com/docs/5.3/blade#the-loop-variable)
+
+---
+
+Espero que les haya sido de utilidad esta lista de cambios!
+
+Y dejen sus comentarios sobre qué tipo de aplicaciones van a desarrollar con Laravel 5.3!

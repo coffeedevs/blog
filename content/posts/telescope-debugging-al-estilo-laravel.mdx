@@ -1,0 +1,219 @@
+---
+title: "Telescope: debugging al estilo Laravel"
+slug: "telescope-debugging-al-estilo-laravel"
+date: "2018-10-31"
+featured: false
+featureImage: "/content/images/2018/10/telescope-1.png"
+excerpt: "La pantalla inicial de TelescopeLaravel Telescope es un nuevo asistente de"
+tags:
+  - "laravel"
+  - "telescope"
+  - "debugging"
+  - "5.7"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+![La pantalla inicial de Telescope](/content/images/2018/10/telescope-empty.PNG)
+*La pantalla inicial de Telescope*
+
+Laravel Telescope es un nuevo asistente de depuración para Laravel, escrito por [Mohamed Said](https://twitter.com/themsaid) y [Taylor Otwell](https://twitter.com/taylorotwell).  Es de código abierto, gratuito, disponible en Github. Puedes agregarlo a tus aplicaciones como una dependencia a travès de Composer. Una vez instalado, puedes accederlo a través de la url `/telescope`.
+
+## ¿Para qué sirve Telescope?
+
+Si alguna vez usaste Clockwork o Laravel Debugbar, imaginatelos pero como una interfaz independiente, con superpoderes. Telescope está compuesto de una serie de guardianes que "observan" cada request que entra a tu aplicación, sean por HTTP, desde la línea de comandos, desde el Scheduler, o desde una queue. Estos "watchers" capturan todo tipo de información sobre los requests y la información que tienen asociada: consultas a la base de datos y su tiempo de ejecución, golpes al caché, eventos disparados, emails enviados, y mucho más. Hay distintas pestañas para cada uno de ellos.
+
+Veamos para qué sirve cada una de las pestañas y qué nos dejan revisar. Todas muestran una lista y además permiten adentrarnos al detalle de cada uno de los ítems.
+
+## Requests
+
+![Lista de todos los Requests entrantes](/content/images/2018/10/telescope-requests-1.PNG)
+*Lista de todos los Requests entrantes*
+
+Esta pestaña nos permite ver todas las peticiones HTTP que lleguen a nuestra aplicación. Puedes inspeccionarlos y ver mucha información útil asociada.
+
+![](/content/images/2018/10/telescope-requests-detail.PNG)
+
+Cada página individual también muestra datos de otros "watchers" que están relacionados con la petición; por ejemplo, todas las bases de datos asociadas y cuanto tardaron; cual es el usuario autenticado para cada request, y mucho más.
+
+### Commands
+
+![](/content/images/2018/10/telescope-commands.PNG)
+
+La pestaña de comandos muestra una lista de los comandos que se ejecutaron y sus códigos de salida. Cuando los inspeccionamos, también podemos ver los argumentos, opciones y elementos relacionados con la ejecución del mismo.
+
+![](/content/images/2018/10/telescope-commands-detail.PNG)
+
+## Schedule
+
+![](/content/images/2018/10/telescope-schedule.PNG)
+
+Schedule muestra la lista de tareas programadas  que se han ejecutado. En la lista detallada, podemos ver la expresión cron utilizada, cuando se ejecutó, etc.
+
+### Jobs
+
+La pestaña de Jobs nos muestra todos los trabajos que se ejecutaron o se están ejecutando. Es similar a Horizon, pero Horizon es exclusivo de Redis, y no es solo una interfaz gráfica sino que también te permite interactuar y configurar tus "queue workers". Telescope, por otro lado, simplemente te muestra información, pero funciona con todos los drivers disponibles de colas.
+
+![](/content/images/2018/10/telescope-jobs.PNG)
+
+En el detalle, podrás ver el nombre del trabajo, la cola en la que se ejecutó, la conexión a la base de datos que uso, el estado y cuando se disparó.
+
+También vas a ver información como el host, el nombre completo de la clase, el número de intentos, si falló por timeout, etc.
+
+![](/content/images/2018/10/telescope-jobs-details.PNG)
+
+Los trabajos son automáticamente etiquetados con cualquier modelo de Eloquent que estén trabajando, así como el usuario si es que hay un usuario involucrado. Ítems como requests, comandos, etc. son asignados automáticamente como etiquetas al trabajo para que puedas filtrarlos en la búsqueda.
+
+Así como con las peticiones HTTP, puedes ver toda la información relacionada con el trabajo como las consultas a base de datos ejecutadas, trabajos que se generaron  a partir de este, y cualquier log que se haya generador del mismo.
+
+## Exceptions
+
+![](/content/images/2018/10/telescope-exceptions.PNG)
+
+Esta pestaña muestra todas las excepciones que se han generado en tu aplicación y te permite inspeccionarlas. Verás información similar a la de otras pestañas, como host, tipo, request que la generó, etiquetas, usuario autenticado, etc.
+
+![](/content/images/2018/10/telescope-excepcition-details.PNG)
+
+También puedes ver la ubicación exacta en el código, resaltada, con un par de líneas por arriba y por debajo para tener un mejor contexto. Lógicamente, está el stack trace completo para que puedas revisar si es necesario.
+
+![](/content/images/2018/10/telescope-exception-message.PNG)
+
+![](/content/images/2018/10/telescope-exception-stacktrace.PNG)
+
+También puedes conseguir un enlace al detalle de la excepción desde la petición que la generó. Esto también puede hacerse desde los detalles de otros elementos, lo que hace a Telescope muy fácil de navegar.
+
+Si una excepción es disparada más de una vez, se empezarán a agrupar, pero igualmente puedes acceder a una en particular si necesitas más información. Esto evita que la página se inunde de una sola excepción que se dispare muy frecuentemente.
+
+## Logs
+
+![](/content/images/2018/10/telescope-log.PNG)
+
+La pestaña de logs permite ver los mensajes *loggeados*, su nivel de severidad, y cuando fueron generados.
+
+Cuando entras a ver el detalle de cada ítem, puedes ver más información, incluyendo el contexto que pasaste a tus ítems como array. Esto te permite una mejor inspección del error que entrar a revisar el archivo de texto de forma manual.
+
+![](/content/images/2018/10/telescope-log-details.PNG)
+
+### Dump screen
+
+![](/content/images/2018/10/telescope-dump.PNG)
+
+Esta pestaña es el servidor de Dump que agregó la versión 5.7 de Laravel, que permite separar los llamados a `dump()` del flujo de nuestra aplicación. Cuando estemos en esta pestaña, todos los llamados a `dump()` se enviarán aquí, y cuando dejemos la pestaña volverán al flujo normal de nuestra aplicación.
+
+## Queries
+
+![](/content/images/2018/10/telescope-queries.PNG)
+
+Muestra una lista de todas las consultas a base de datos, justo como lo hace Laravel Debug Bar. Cuánto tardaron, cuándo ocurrieron y si entramos al detalle, podemos ver la información asociada, la consulta completa, quién la disparó, todo correctamente formateado.
+
+![Las consultas lentas mostrarán su duración en rojo](/content/images/2018/10/telescope-queries-detail-1.PNG)
+*Las consultas lentas mostrarán su duración en rojo*
+
+Puedes configurar en tu Service Provider que consultas quieres que sean marcadas como "lentas" y marcarlas de rojo en la lista. Esto permite también filtrarlas por el campo de búsqueda.
+
+## Models
+
+![](/content/images/2018/10/telescope-models.PNG)
+
+Puedes ver eventos disparados de tus modelos como creación, actualización, eliminación, los cambios realizados, etc.
+
+![](/content/images/2018/10/telescope-models-details.PNG)
+
+Obviamente, como en todas las pestañas, puedes ver quién generó los cambios.
+
+### Events
+
+![](/content/images/2018/10/telescope-events.PNG)
+
+Muestra una lista de todos tus eventos. Puedes ver cuantos *listeners* están asociados, filtrarlos por etiqueta, y ver cuando ocurrieron. Si entras al detalle también puedes ver quién lo disparó y cuáles son los listeners exactos.
+
+![](/content/images/2018/10/telescope-events-details.PNG)
+
+### Mail
+
+![](/content/images/2018/10/telescope-mail.PNG)
+
+La pestaña Mail te muestra una lista de todos los emails que enviaste, quienes los recibieron, cuando se dispararon, si están encolados o no, el asunto, y hasta puedes descargarlo como un archivo .eml y abrirlo con tu cliente de email preferido y ver como se muestra. También puedes ver una previsualización del mismo.
+
+![](/content/images/2018/10/telescope-mail-details.PNG)
+
+![](/content/images/2018/10/telescope-mail-preview.PNG)
+
+## Notifications
+
+![](/content/images/2018/10/telescope-notifications.PNG)
+
+Muestra todas las notificaciones, de qué tipo son, cuando se enviaron, etc. Las notificaciones que sean por email se mostrarán también previsualizadas, pero no para el resto.
+
+![](/content/images/2018/10/telescope-notifications-details-1.PNG)
+
+Si una notificación fue encolada, puedes verla en la parte de Jobs.
+
+## Cache
+
+![](/content/images/2018/10/telescope-cache.PNG)
+
+Esta pestaña muestra las interacciones con el caché, si se acertó o falló, si fue guardada en cache o eliminada del mismo, etc. También puedes ver quién lo originó.
+
+## Redis
+
+Esta pestaña es similar a Cache, mostrando cuando se agregaron, modificaron o borraron claves de Redis.
+
+## Authenticated user
+
+![](/content/images/2018/10/telescope-auth.PNG)
+
+Esto no es una pestaña pero puede aparecer en Telescope cuando alguno de sus elementos esté asociado con un usuario autenticado.
+
+## Authorization
+
+Puedes usar una lista de emails en el Service Provider de Telescope para definir qué usuarios pueden accederlo en producción. O puedes usar el gate viewTelescope para definir si un usuario puede o no accederlo.
+
+## Filtering
+
+En producción, puedes no querer guardar todo lo que sucede, por lo que puedes definir filtros en el Service Provider de la siguiente forma: `Telescope::filter(function ($entry){})`
+
+Filtro por defecto:
+
+```php
+function ($entry) {
+    if (local) { return true; }
+
+    return $entry->isReportableException ||
+        $entry->isfailedJob() ||
+        $entry->isScheduledTask() ||
+        $entry->hasMonitoredTag();
+}
+
+```
+
+Puedes modificar esto como tú quieras.
+
+## Monitored tags
+
+Ve al botón de Radar y agrega una etiqueta para monitorear. Esto sirve para filtrar por etiquetas en producción.
+
+## Prune
+
+Puedes  programar que Telescope limpie entradas antiguas, configurar una hora al día en la que se ejecute la limpieza y determinar hasta cuantas horas quieres guardar de información. También puedes activar o desactivar algunos watchers desde la configuración de Telescope (config/telescope). Incluso puedes definir un límite con la clave TELESCOPE_LIMIT (100 por defecto) que es el número máximo de entradas que Telescope guarda para cada watcher. Muchos de estos cambios son configurables por .env.
+
+## Miscellaneous
+
+Telescope puede ser ejecutado de forma local y en producción, y viene integrado con autorización y herramientas para mantener de forma privada tus datos. Provee un acceso similar a la información desde distintos ángulos, es super configurable, y permite una búsqueda fácil y rápida a través de las etiquetas. 
+
+Es recomendable instalarlo en una base de datos separada, y también hay formas de filtrar el *logging *para que los datos sensibles no sean guardados.
+
+También puedes activar el **modo Oscuro** utilizando `Telescope::night()` en tu Service Provider.
+
+![Todo lo que tenga Dark Mode tiene mi aprobación ?](/content/images/2018/10/telescope-dark-mode.PNG)
+*Todo lo que tenga Dark Mode tiene mi aprobación ?*
+
+Toda la información es almacenada en una base de datos, detrás de una interface StorageRepository, y funcionando con Redis. Pero puedes implementarlo como quieras. 
+
+Con respecto a la cantidad de información que se guarda, no es pesada ya que en producción se descartan la mayoría de los eventos, y con la limpieza programada y el límite de 100 ítems, el espacio utilizado es poco significativo.
+
+No tiene un mayor impacto en el tiempo de arranque de Laravel, y en producción mantiene las escrituras a un mínimo. También puedes deshabilitar watchers que no requieras para reducir aún más el consumo.

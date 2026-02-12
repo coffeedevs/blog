@@ -1,0 +1,415 @@
+---
+title: "Laravel 9 - Cambios en español"
+slug: "laravel-9-cambios-en-espanol"
+date: "2022-03-19"
+featured: true
+featureImage: "/content/images/2022/03/1642886183973.png"
+excerpt: "Laravel 9"
+tags:
+  - "laravel"
+  - "9"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+## Laravel 9
+
+Como ya sabrán, Laravel hizo la transición a lanzamientos anuales con el lanzamiento de Laravel 8. Anteriormente, las versiones principales se lanzaban cada 6 meses. Esta transición tiene como objetivo aliviar la carga de mantenimiento de la comunidad y desafiar al equipo de Laravel a ofrecer nuevas funciones sorprendentes y potentes sin introducir cambios importantes.
+
+Laravel 9 sigue las mejoras realizadas en Laravel 8.x introduciendo soporte para los componentes 6.0 de **Symfony**, **Symfomny Mailer**, **Flysystem 3.0**, mejoras de salida en `route:list`, un driver de Laravel Scout para la base de datos, una sintáxis nueva para accesors/mutators, la posibilidad de usar Enums en las rutas implicitas, y una variedad de otras correcciones y mejoras de usabilidad.
+
+### PHP 8.0
+
+Laravel 9.x requiere mínimo PHP 8.0.
+
+### Symfony Mailer
+
+Versiones anteriores de Laravel usaban la librería Swift Mailer para enviar email. Esa librería no tiene más mantenimiento y ahora fue reemplazada por Symfony Mailer.
+
+### Flysystem 3.x
+
+Laravel 9.x actualiza la dependencia de Flysystem a la 3.x.
+
+Flysystem se encarga de todas las interacciones con el sistema de archivos ofrecidos por la fachada `Storage`.
+
+### Mejoras en los Accessors / Mutators de Eloquent
+
+Laravel 9.x ofrece una nueva forma de definir `accesors` y `mutators` en Eloquent. En versiones previas de Laravel, la única forma de definirlos era mediante métodos prefixeados en tu modelo:
+
+```php
+public function getNameAttribute($value)
+{
+    return strtoupper($value);
+}
+ 
+public function setNameAttribute($value)
+{
+    $this->attributes['name'] = $value;
+}
+
+```
+
+Sin embargo, en Laravel 9.x puedes definir `accessors` y `mutators` usando un método único, sin prefixes, usando `Attribute` como `type-hint`.
+
+```php
+use Illuminate\Database\Eloquent\Casts\Attribute;
+ 
+public function name(): Attribute
+{
+    return new Attribute(
+        get: fn ($value) => strtoupper($value),
+        set: fn ($value) => $value,
+    );
+}
+
+```
+
+Además, este nuevo enfoque permite definir `accesors` que se pueden cachear, mejorando el rendimiento:
+
+```php
+use App\Support\Address;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+ 
+public function address(): Attribute
+{
+    return new Attribute(
+        get: fn ($value, $attributes) => new Address(
+            $attributes['address_line_one'],
+            $attributes['address_line_two'],
+        ),
+        set: fn (Address $value) => [
+            'address_line_one' => $value->lineOne,
+            'address_line_two' => $value->lineTwo,
+        ],
+    );
+}
+
+```
+
+### Casting de atributos a Enums
+
+#### Solo disponible para PHP 8.1+.
+
+Eloquent ahora te permite castear tus atributos a Enums definidos en PHP.
+
+Para lograr esto, puedes especificar un atributo y un Enum al que quieres transformarlo en el array `$casts` de tu modelo:
+
+```php
+use App\Enums\ServerStatus;
+ 
+/**
+ * The attributes that should be cast.
+ *
+ * @var array
+ */
+protected $casts = [
+    'status' => ServerStatus::class,
+];
+
+```
+
+Una vez que definiste el cast para tu modelo, el atributo especificado será automaticamente transformado desde y hacia el Enum elegido:
+
+```php
+if ($server->status == ServerStatus::provisioned) {
+    $server->status = ServerStatus::ready;
+ 
+    $server->save();
+}
+
+```
+
+### Parámetros en rutas implicitas con Enums
+
+PHP 8.1 introduce soporte para Enums. Laravel 9 agrega la habilidad de usar un Enum como `type-hint` en la definición de tu ruta y Laravel solo invocara la ruta si ese segmento corresponde a un Enum valido. De otra forma, devuelve un 404.
+
+Por ejemplo, dado el siguiente Enum:
+
+```php
+enum Category: string
+{
+    case Fruits = 'fruits';
+    case People = 'people';
+}
+
+```
+
+Puedes definir una ruta que solo será invocada si el segmento `{category}` de la ruta es "fruits" o "people". De otra manera, se devolverá una respuesta 404:
+
+```php
+Route::get('/categories/{category}', function (Category $category) {
+    return $category->value;
+});
+
+```
+
+### Limitación forzada de Route Bindings (uniones de ruta)
+
+En versiones anteriores de Laravel, podías limitar el segundo modelo de Eloquent en la definición de una ruta como el hijo del modelo anterior.
+
+Por ejemplo, considera la siguiente definición de una ruta que recibe un `blog post` por `slug` de un usuario específico:
+
+```php
+use App\Models\Post;
+use App\Models\User;
+ 
+Route::get('/users/{user}/posts/{post:slug}', function (User $user, Post $post) {
+    return $post;
+});
+
+```
+
+Cuando se usa una clave implicita para hacer la unión como un parámetro anidado, Laravel automáticamente limita la consulta para recuperar el modelo anidado usando convenciones para adivinar la relación entre el hijo y el padre.
+
+Sin embargo, este comportamiento estaba soportado previamente por Laravel solo cuando se usaba una clave personalizada para limitar la ruta hijo (`slug` en este caso).
+
+Ahora, en Laravel 9, puedes indicar a Laravel que limite el "hijo" incluso cuando no hay una clave personalizada definida. Para hacer esto, puedes invocar el método `scopeBindings` cuando defines la ruta:
+
+```php
+use App\Models\Post;
+use App\Models\User;
+ 
+Route::get('/users/{user}/posts/{post}', function (User $user, Post $post) {
+    return $post;
+})->scopeBindings();
+
+```
+
+O, puedes indicar a un grupo entero de definiciones de ruta a usar uniones limitadas:
+
+```php
+Route::scopeBindings()->group(function () {
+    Route::get('/users/{user}/posts/{post}', function (User $user, Post $post) {
+        return $post;
+    });
+});
+
+```
+
+### Controladores para grupos de rutas
+
+Ahora puede usar el método `controller` para definir un controlador común para todas las rutas dentro del grupo. Luego, al definir las rutas, solo necesitas proporcionar el `Controller` que invocan:
+
+```php
+use App\Http\Controllers\OrderController;
+ 
+Route::controller(OrderController::class)->group(function () {
+    Route::get('/orders/{id}', 'show');
+    Route::post('/orders', 'store');
+});
+
+```
+
+### Búsquedas de texto completo para índices y consultas `where`
+
+Al usar MySQL o PostgreSQL, ahora se puede agregar el método fullText a las definiciones de columna para generar índices de texto completo:
+
+```php
+$table->text('bio')->fullText();
+
+```
+
+Además, los métodos whereFullText y orWhereFullText se pueden usar para agregar cláusulas "where" de texto completo a una consulta de columnas que tienen índices de texto completo. Laravel transformará estos métodos en el SQL apropiado para el sistema de base de datos subyacente. Por ejemplo, se generará una cláusula MATCH AGAINST para aplicaciones que utilicen MySQL:
+
+```php
+$users = DB::table('users')
+           ->whereFullText('bio', 'web developer')
+           ->get();
+
+```
+
+### Motor de base de datos de Laravel Scout
+
+Si su aplicación interactúa con bases de datos pequeñas o medianas o tiene una carga de trabajo liviana, ahora puede usar el motor de "base de datos" de Scout en lugar de un servicio de búsqueda dedicado como Algolia o MeiliSearch. El motor de la base de datos utilizará cláusulas `whereLike` e índices de texto completo cuando filtre los resultados de su base de datos existente para determinar los resultados de búsqueda aplicables para su consulta.
+
+Para aprender más sobre el motor de base de datos Scout, consulte la documentación de Scout.
+
+### Renderizar plantillas Blade en línea
+
+A veces, es posible que deba transformar una cadena de plantilla Blade sin procesar en HTML válido. Puede lograr esto utilizando el método de renderizado proporcionado por la fachada de Blade. El método de representación acepta la cadena de plantilla Blade y una matriz opcional de datos para proporcionar a la plantilla:
+
+```php
+use Illuminate\Support\Facades\Blade;
+ 
+return Blade::render('Hello, {{ $name }}', ['name' => 'Julian Bashir']);
+
+```
+
+De manera similar, el método `renderComponent` se puede usar para representar un componente de clase dado pasando la instancia del componente al método:
+
+```php
+use App\View\Components\HelloComponent;
+ 
+return Blade::renderComponent(new HelloComponent('Julian Bashir'));
+
+```
+
+### Método corto para nombres de Slots
+
+En versiones anteriores de Laravel, los nombres de los `slots` se proporcionaban mediante un atributo de nombre en la etiqueta `x-slot`:
+
+```xml
+<x-alert>
+    <x-slot name="title">
+        Server Error
+    </x-slot>
+
+    <strong>Whoops!</strong> Something went wrong!
+</x-alert>
+```
+
+Sin embargo, a partir de Laravel 9.x, puede especificar el nombre de la ranura usando una sintaxis conveniente y más corta:
+
+```xml
+<x-slot:title>
+    Server Error
+</x-slot>
+```
+
+### Directivas Blade para Selected y Checked
+
+Para mayor comodidad, ahora puede usar la directiva `@checked` para indicar fácilmente si una entrada de casilla de verificación HTML determinada está "marcada". Esta directiva se repetirá si la condición proporcionada se evalúa como verdadera:
+
+```xml
+<input type="checkbox"
+        name="active"
+        value="active"
+        @checked(old('active', $user->active)) />
+```
+
+Del mismo modo, la directiva `@selected` se puede usar para indicar si una determinada opción de selección debe ser "seleccionada":
+
+```xml
+<select name="version">
+    @foreach ($product->versions as $version)
+        <option value="{{ $version }}" @selected(old('version') == $version)>
+            {{ $version }}
+        </option>
+    @endforeach
+</select>
+```
+
+Bootstrap 5 Pagination Views
+
+Laravel ahora incluye vistas de paginación creadas con Bootstrap 5. Para usar estas vistas en lugar de las vistas predeterminadas de Tailwind, puede llamar al método `useBootstrapFive` del paginador dentro del método `boot` de su clase `App\Providers\AppServiceProvider`:
+
+```php
+use Illuminate\Pagination\Paginator;
+ 
+/**
+ * Bootstrap any application services.
+ *
+ * @return void
+ */
+public function boot()
+{
+    Paginator::useBootstrapFive();
+}
+
+```
+
+### Mejoras de validación para datos en matrices anidadas
+
+A veces, es posible que necesite acceder al valor de un elemento de matriz anidado determinado al asignar reglas de validación al atributo. Ahora puede lograr esto usando el método `Rule::forEach`. El método `forEach` acepta una función de clausura que se invocará para cada iteración del atributo de matriz siendo validado, y recibirá el valor del atributo y el nombre de atributo explícito y completamente expandido. La función de clausura debe devolver una matriz de reglas para asignar al elemento de la matriz:
+
+```php
+use App\Rules\HasPermission;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+ 
+$validator = Validator::make($request->all(), [
+    'companies.*.id' => Rule::forEach(function ($value, $attribute) {
+        return [
+            Rule::exists(Company::class, 'id'),
+            new HasPermission('manage-company', $value),
+        ];
+    }),
+]);
+
+```
+
+### API de Laravel Breeze y Next.js
+
+El kit de inicio de **Laravel Breeze** ha recibido un modo "API" de scaffolding/andamiaje  y una implementación de frontend complementaria de **Next.js**. Este kit inicial se puede usar para poner en marcha sus aplicaciones Laravel que sirven como backend a través de una API autenticada de Laravel Sanctum para una interfaz de JavaScript.
+
+### Página de excepción Ignition mejorada
+
+**Ignition**, la página de depuración de excepciones de código abierto creada por Spatie, se ha rediseñado desde cero. El nuevo y mejorado Ignition viene con Laravel 9.x e incluye temas claro/oscuro, funcionalidad personalizable de "abrir en el editor" y más.
+
+### Mejoras en la salida del comando de CLI `route:list``
+
+La salida de CLI de `route:list` se ha mejorado significativamente para la versión Laravel 9.x, lo que ofrece una hermosa experiencia nueva al explorar las definiciones de ruta.
+
+### Cobertura de pruebas con el comando `test` de Artisan
+
+El comando `test` de Artisan recibió una nueva opción `--coverage` que puede usar para explorar la cantidad de cobertura de código que sus pruebas brindan a su aplicación:
+
+```php
+php artisan test --coverage
+
+```
+
+Los resultados de la cobertura de la prueba se mostrarán directamente en la salida de la CLI.
+
+Además, si desea especificar un umbral mínimo que debe cumplir el porcentaje de cobertura de su prueba, puede usar la opción `--min`. La suite de pruebas fallará si no se alcanza el umbral mínimo dado:
+
+```php
+php artisan test --coverage --min=80.3
+
+```
+
+### Servidor de Echo: Soketi
+
+Aunque no es exclusivo de Laravel 9.x, Laravel ha ayudado recientemente con la documentación de Soketi, un servidor Web Socket compatible con Laravel Echo escrito para Node.js. Soketi ofrece una excelente alternativa de código abierto a Pusher y Ably para aquellas aplicaciones que prefieren administrar su propio servidor Web Socket.
+
+Para obtener más información sobre el uso de Soketi, consulte la documentación de transmisión y la documentación de Soketi.
+
+### Mejor soporte del IDE para Colecciones
+
+Laravel 9.x agrega definiciones "genéricas" mejoradas al componente de colecciones, mejorando el soporte de análisis estático y IDE. Los IDE como PHPStorm o las herramientas de análisis estático como PHPStan ahora comprenderán mejor las colecciones de Laravel de forma nativa.
+
+### Nuevos helpers
+
+Laravel 9.x presenta dos funciones `helpers` nuevas y convenientes que puede usar en su propia aplicación.
+
+#### str
+
+La función str devuelve una nueva instancia de `Illuminate\Support\Stringable` para el string dado.
+
+Esta función es equivalente al método `Str::of`:
+
+```php
+$string = str('Taylor')->append(' Otwell');
+ 
+// 'Taylor Otwell'
+
+```
+
+Si no se proporciona ningún argumento a la función `str`, la función devuelve una instancia de `Illuminate\Support\Str`:
+
+```php
+$snake = str()->snake('LaravelFramework');
+ 
+// 'laravel_framework'
+
+```
+
+#### to_route
+
+La función `to_route` genera una respuesta HTTP de redirección para una ruta con nombre determinada, lo que proporciona una forma expresiva de redirigir a rutas con nombre desde sus rutas y controladores:
+
+```php
+return to_route('users.show', ['user' => 1]);
+
+```
+
+Si es necesario, puede pasar el código HTTP que debe asignarse a la redirección y cualquier encabezado de respuesta adicional como el tercer y cuarto argumento del método `to_route`:
+
+```php
+return to_route('users.show', ['user' => 1], 302, ['X-Framework' => 'Laravel']);
+
+```

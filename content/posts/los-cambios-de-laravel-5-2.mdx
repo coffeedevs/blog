@@ -1,0 +1,139 @@
+---
+title: "Lista de cambios en español para Laravel 5.2"
+slug: "los-cambios-de-laravel-5-2"
+date: "2015-12-22"
+featured: false
+featureImage: "/content/images/2015/12/Laravel-5-1.png"
+excerpt: "Laravel 5.2"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+### Laravel 5.2
+
+Laravel 5.2 continua las mejoras realizadas en Laravel 5.1, agregando soporte para múltiples controladores de autenticación, model-binding implícito en las definiciones de rutas, scopes globales simplificados para Eloquent, scaffolding para rutas y vistas de autenticación, grupos de middlewares, middleware limitador de ratios, mejoras a la validación de arrays, y más.
+
+##### Controladores de Autenticación / "Multi-Auth"
+
+En versiones anteriores de Laravel, sólo el driver por defecto, basado en sesiones, era soportado de base, y no podías tener más de una instancia de modelo autenticable por aplicación.
+
+Sin embargo, en Laravel 5.2, puedes definir controladores de autenticación adicionales, y controlar el proceso de forma individualizada. Por ejemplo, si tu aplicación tiene una base de datos para usuarios y otra para administradores, ahora puedes usar los metodos de la fachada Auth para autenticar contra las dos bases por separado.
+
+#### Authentication Scaffolding
+
+Laravel ya facilita manejar la autenticación en el backend; sin embargo, Laravel 5.2 provee una conveniente y rápida forma de generar las vistas y rutas de tu front-end. Simplemente ejecuta el comando make:auth en tu terminal:
+
+```console
+php artisan make:auth
+
+```
+
+Este comando generará vistas compatibles con Bootstrap para login, registro y reseteo de contraseñas. Además, el comando actualizará el archivo de rutas con las rutas apropiadas.
+
+#### Model-binding implicito
+
+El model-binding implicito hace que sea indoloro inyectar modelos relevantes directamente a tus rutas y controladores.
+
+Por ejemplo, asume que tienes una ruta definida como la siguiente:
+
+```php
+use App\User;
+
+Route::get('/user/{user}', function (User $user) {
+    return $user;
+});
+
+```
+
+En Laravel 5.1, tipicamente usarías Route::model para decirle a Laravel que inyecte la instancia de App\User que coincide con el parametro `{user}` en la definición de tu ruta. Sin embargo, en Laravel 5.2, el framework automáticamente inyecta el modelo basado en el segmento de la URI, permitiendo ganar acceso a la instancia de modelo que necesitas, rápidamente.
+
+Laravel automáticamente inyecta el modelo cuando el parámetro de la ruta coincide con el nombre de la variable en el closure o el controlador, y la variable tiene un modelo Eloquent type-hinted.
+
+#### Grupos de Middlewares
+
+Los grupos de middlewares te permiten agrupar varios middlewares bajo una simple, conveniente llave, permitiendote asignar más de un middleware a una ruta en un solo paso.
+
+Por ejemplo, puede ser útil cuando construyes un UI web y una API en la misma aplicación.Puedes agrupar los middlewares de sesión y CSRF en un grupo web, y quizás el limitador de ratio en el grupo de API.
+
+De hecho, la estructura por defecto de Laravel 5.2 toma exactamente ese approach. Por ejemplo, en App\Http\Kernel.php encontrarás lo siguiente:
+
+```php
+
+/**
+ * The application's route middleware groups.
+ *
+ * @var array
+ */
+protected $middlewareGroups = [
+    'web' => [
+        \App\Http\Middleware\EncryptCookies::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \App\Http\Middleware\VerifyCsrfToken::class,
+    ],
+
+    'api' => [
+        'throttle:60,1',
+    ],
+];
+
+```
+
+Luego, puedes asignar el grupo web a las rutas así:
+
+```php
+Route::group(['middleware' => ['web']], function () {
+    //
+});
+
+```
+
+#### Limitador de ratio
+
+Un nuevo middleware limitador de ratio está incluido ahora en el framework, permitiendote establecer fácilmente el número de peticiones que pueda realizar una dirección IP a una ruta en un determinado tiempo, en minutos. Por ejemplo, para limitar una ruta a 60 peticiones por minuto desde una única IP, puedes hacer lo siguiente:
+
+```php
+Route::get('/api/users', ['middleware' => 'throttle:60,1', function () {
+    //
+}]);
+
+```
+
+#### Validación de Arrays
+
+Validar arrays de inputs en un formulario se volvió mucho más fácil en Laravel 5.2 Por ejemplo, para validar cada e-mail en un array dado de inputs como único, puedes hacer lo siguiente:
+
+```php
+$validator = Validator::make($request->all(), [
+    'person.*.email' => 'email|unique:users'
+]);
+
+```
+
+A su vez, puedes utilizar el * cuando especificas los mensajes de validación en tu archivo de lenguaje, haciendo que sea sencillo usar un sólo mensaje de validación para campos basados en arrays:
+
+```php
+'custom' => [
+    'person.*.email' => [
+        'unique' => 'Each person must have a unique e-mail address',
+    ]
+],
+
+```
+
+#### Mejoras para los Scopes globales en Eloquent
+
+En las versiones anteriores de Laravel, los Scopes globales de Eloquent eran complicados de implementar y sujetos a errores; sin embargo, en Laravel 5.2, sólo requieren que implementes un simple método: apply.
+
+Para más información sobre escribir scopes globales, revisa la documentación completa de [Eloquent](http://laravel.com/docs/5.2/eloquent#global-scopes).
+
+---
+
+En CoffeeDevs estamos muy contentos con la nueva versión de Laravel y esperamos con ansias poder usar todas sus nuevas características en nuestros próximos proyectos.
+
+Quizá el próximo sea el tuyo! Ponte en **[contacto](http://coffeedevs.com/#contact)** con nosotros ya!

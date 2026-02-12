@@ -1,0 +1,108 @@
+---
+title: "Comparar la página actual con una ruta nombrada, en Laravel 5.2"
+slug: "comparar-la-pagina-actual-con-una-ruta-nombrada-laravel-5-2"
+date: "2016-04-01"
+featured: false
+featureImage: "/content/images/2016/03/bigstock-Programming-Coding-Flat-Concep-76168088.jpg"
+excerpt: "Todos sabemos que en un menú de navegación, es importante que la sección o"
+tags:
+  - "laravel"
+  - "tips"
+  - "blade"
+  - "5.2"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Todos sabemos que en un menú de navegación, es importante que la sección o página sobre la que estamos navegando, este diferenciada del resto aplicándole una clase distinta, por ejemplo, "active".
+
+Ahora bien, la cosa se complica cuando el menú es común a varias páginas y tiene que saber en cuál esta para distinguirla.
+
+Una forma es resolverlo en el cliente, usando Javascript, pero otros preferimos entregar el HTML ya formateado desde el servidor.
+
+Para hacer esto, nuestro template Blade tiene que saber donde está y compararlo con la URL actual, para luego aplicar o no la clase correspondiente, por ejemplo:
+
+```php
+<li @if (Request::is('/') class="active" @endif >Home</li>
+```
+
+Ahora bien, acá lo que hacemos es comparar directamente la ruta, pero en Laravel, tenemos la opción de nombrar nuestras rutas, y referenciarlas usando route('nombre'):
+
+```php
+Route::get('/', 'HomeController@home')->name('home');
+
+```
+
+Esta ruta se puede generar mediante **url('/')** o mediante **route('home')**, ambas dando como resultado [http://localhost/](http://localhost/)
+
+##### Cuál es la ventaja de usar rutas nombradas, se preguntarán?
+
+La ventaja es que si a lo largo de mi código, yo utilizo el nombre de la ruta para accederla, **puedo cambiar la ruta real sin modificar el resto del código**:
+
+```php
+Route::get('home', 'HomeController@home')->name('home');
+
+```
+
+Los vínculos que estaban definidos con **route('home')** se actualizaron a [http://localhost/home](http://localhost/home), mientras que los que usaban **url('/')** siguen apuntando a [http://localhost/](http://localhost/).
+
+Así, logramos indepedencia de cómo se ven las rutas en el navegador y cómo las quiero definir para la estructura de mi aplicación, algo que puede ser útil, por ejemplo, para mostrar rutas en español pero accederlas desde código en inglés.
+
+###### Ahora bien, que tiene todo esto que ver con el menú de navegación?
+
+Como podrán haber imaginado, de nada sirve usar rutas nombradas, si a la hora de decidir si tengo que agregarle una clase "active" a mi ítem de menú, sigo usando la ruta directamente, en lugar de usar **route()**:
+
+```php
+<li @if (Request::is('/') class="active" @endif >Home</li>
+```
+
+Esto ya no funciona, porque ahora Home es [http://localhost/home](http://localhost/home)' y no es más [http://localhost/](http://localhost/).
+
+Si tan solo tuvieramos alguna forma de usar **route()** para comparar contra la ruta actual...Momento, podemos!
+
+```php
+<li @if (Request::url() == route('home')) class="active" @endif >Home</li>
+```
+
+De esta forma, conseguimos que la comparación sea siempre contra el nombre de la ruta y no con su dirección real.
+
+Pero por otro lado, agrandamos bastante el código y lo complejizamos un poco, y vamos a hacer lo mismo para todas las secciones de la página!
+
+###### Directivas de Blade al rescate!
+
+Extendiendo el motor de plantillas de Laravel, conseguimos simplificar el código y dejarlo tan elegante como siempre.
+
+```php
+<li @routeIs('home') class="active" @endif >Home</li>
+```
+
+***Mucho mejor no?***
+
+**@routeIs** es una directiva de Blade que definimos nosotros, y cómo hacemos esto?
+
+Fácil, en ***app/Providers/ServiceProviders*** abrimos **AppServiceProvider**:
+
+```php
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        Blade::directive('routeIs', function ($expression) {
+            return "";
+        });
+    }
+
+```
+
+**Ahora sí!** Ya podemos usar nuestra nueva directiva para fijarnos si estamos sobre una ruta nombrada o no, sin tener que usar la ruta real, *ganando flexibilidad a la hora de cambiar nuestra configuración*.
+
+Espero que les haya servido!

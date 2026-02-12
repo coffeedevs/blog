@@ -1,0 +1,255 @@
+---
+title: "Creando un API RESTful con Laravel 5.2 parte 2"
+slug: "creando-un-api-restful-con-laravel-5-2-parte-2"
+date: "2016-12-04"
+featured: true
+featureImage: "/content/images/2016/12/website_analytics_development_vector_design_mobile_computing_analysis_web_flat_icons_modern_business_chart_illustration_concept.jpg"
+excerpt: "Luego de un tiempo sin escribir, voy a continuar con el tutorial acerca de REST"
+author:
+  name: "Martín Guadalupe"
+  slug: "martin"
+---
+
+Luego de un tiempo sin escribir, voy a continuar con el tutorial acerca de REST API's con laravel.
+
+En [la primer parte](/crear-un-api-restful-con-laravel-5-2-parte-1/) pudimos llegar a listar proyectos y tareas, pero todavía no creamos el código para poder insertar, actualizar y eliminar estos recursos.  Antes de comenzar la implementación, voy a mencionar ciertas características a tener en cuenta a la hora de crear una API REST.
+
+###### URI's
+
+Debemos identificar de manera única los recursos en el servidor.  Para ésto utilizaremos URI's que tendrán la siguiente forma:
+
+```
+{protocolo}://{dominio o hostname}[:puerto (opcional)]/{ruta del recurso}?{consulta de filtrado}
+```
+
+En la parte 1 del tutorial usamos [http://localhost/projects](http://localhost/projects) para obtener el listado del proyecto.  Como verán respetamos la forma mencionada arriba.
+
+Generalmente se recomienda utilizar como nombre del recurso un sustantivo en plurar.  La idea de esto es que sea lo mas simple y uniforme dentro de lo posible.
+
+###### Verbos HTTP
+
+Los verbos HTTP mas comunes son:
+
+GET: Para consultar y leer recursos.
+
+POST: Para crear recursos.
+
+PUT: Para editar recursos.
+
+DELETE: Para eliminar recursos.
+
+PATCH: Para editar partes concretas de un recurso.
+
+### Manos a la obra
+
+Sabiendo ésto, vamos a describir los diferentes endpoints que va a tener nuestro Web Service.  Si nos ubicamos en el archivo de rutas, vamos a ver que utilizamos las rutas preparadas para RESTful, osea que tenemos los siguientes endpoints:
+
+###### Para proyectos
+
+```
+GET      /projects
+GET      /projects/{id}
+POST     /projects
+PUT      /projects/{id}
+DELETE   /projects/{id}
+```
+
+###### Para tareas
+
+```
+GET      /projects/{projectId}/tasks
+GET      /projects/{projectId}/tasks/{taskId}
+POST     /projects/{projectId}/tasks
+PUT      /projects/{projectId}/tasks/{taskId}
+DELETE   /projects/{projectId}/tasks/{taskId}
+```
+
+Completemos los controllers con los métodos mencionados.
+
+```php
+<?php
+// app/Http/Controllers/ProjectsController.php
+
+namespace App\Http\Controllers;
+
+use App\Project;
+use App\Http\Requests;
+use Illuminate\Support\Facades\Input;
+
+class ProjectsController extends Controller
+{
+    public function index()
+    {
+        return Project::all();
+    }
+
+    public function store()
+    {
+        return Project::create(Input::all());
+    }
+
+
+    public function show($id)
+    {
+        return Project::findOrFail($id);
+    }
+
+
+    public function update($projectId)
+    {
+        Project::findOrFail($projectId)->update(Input::all());
+    }
+
+
+    public function destroy($id)
+    {
+        Project::findOrFail($id)->delete();
+    }
+}
+```
+
+Como podemos observar, los métodos que tiene el controlador concuerdan con los descritos en las rutas.  Cuando creamos un recurso, se llamara al método store(), cuando queremos un recurso en concreto llamamos a show($id), cuando queremos actualizar llamamos a updtate($id) y cuando queremos eliminar llamamos al método destroy($id).  A la hora de responder, estamos haciéndolo de la forma mas sencilla posible.  Aprovechamos el código de estado propio del protocolo HTTP para indicar si fue exitoso o que pasó en el request, y cuando hace falta devolvemos algo que nos sirva.  En el caso del store(), además de crear el recurso lo devolvemos, ésto le va a permitir al cliente evitar un request para saber el Id del nuevo recurso.
+
+Por otro lado, el controlador de tareas nos va a quedar así:
+
+```php
+get();
+    }
+
+    public function store($projectId)
+    {
+        $project = Project::findOrFail($projectId);
+        $input = Input::all();
+        $input['project_id'] = $project->id;
+        return Task::create($input);
+    }
+
+    public function show($projectId,$taskId)
+    {
+        return Task::findOrFail($taskId);
+    }
+
+    public function update($projectId, $taskId)
+    {
+        Task::findOrFail($taskId)->update(Input::all());
+    }
+
+    public function destroy($projectId, $taskId)
+    {
+        Task::findOrFail($taskId)->delete();
+    }
+}
+
+```
+
+Muy similar al anterior, pero al tener una relación con los proyectos, se debe indicar a que proyecto está asociada la tarea.
+
+Antes de comenzara usar el API debemos tener en cuenta que en laravel 5.2 todas las rutas que ubiquemos en app/Http/routes.php estarán bajo el middleware group "web".  Esto quiere decir que tendrá asociado el middleware VerifyCsrfToken, el cuál nos pedirá que enviemos un token en las peticiones que no son GET.  Este problema se puede solucionar de varias maneras.  Se podría comentar la línea donde se incluye.
+
+```php
+ protected $middlewareGroups = [
+        'web' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            // \App\Http\Middleware\VerifyCsrfToken::class,
+        ],
+
+        'api' => [
+            'throttle:60,1',
+        ],
+    ];
+
+```
+
+Otra opción podría ser crear un archivo de rutas para las rutas del api.  Como se usa en laravel 5.3, podríamos crear el archivo routes/api.php y asociarlo en el service provider.
+
+```php
+<?php
+// app/Providers/RouteServiceProvider.php
+
+namespace App\Providers;
+
+use Illuminate\Routing\Router;
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+
+class RouteServiceProvider extends ServiceProvider
+{
+    /**
+     * This namespace is applied to your controller routes.
+     *
+     * In addition, it is set as the URL generator's root namespace.
+     *
+     * @var string
+     */
+    protected $namespace = 'App\Http\Controllers';
+
+    /**
+     * Define your route model bindings, pattern filters, etc.
+     *
+     * @param  \Illuminate\Routing\Router  $router
+     * @return void
+     */
+    public function boot(Router $router)
+    {
+        //
+
+        parent::boot($router);
+    }
+
+    /**
+     * Define the routes for the application.
+     *
+     * @param  \Illuminate\Routing\Router  $router
+     * @return void
+     */
+    public function map(Router $router)
+    {
+
+        $this->mapApiRoutes($router);
+
+        //
+    }
+
+    /**
+     * Define the "web" routes for the application.
+     *
+     * These routes all receive session state, CSRF protection, etc.
+     *
+     * @param  \Illuminate\Routing\Router  $router
+     * @return void
+     */
+    protected function mapWebRoutes(Router $router)
+    {
+        $router->group([
+            'namespace' => $this->namespace, 'middleware' => 'web',
+        ], function ($router) {
+            require app_path('Http/routes.php');
+        });
+    }
+
+    protected function mapApiRoutes(Router $router)
+    {
+        $router->group([
+            'namespace' => $this->namespace, 'middleware' => 'api',
+        ], function ($router) {
+            require base_path('routes/api.php');
+        });
+    }
+}
+```
+
+Con esto ya podremos utilizar esta API REST muy sencilla.  Podrían probarla utilizando algún cliente como Postman o Advanced REST client.  Ambos se pueden descargar desde las apps de Chrome.
+
+![](/content/images/2016/12/ejemplo.png)
+
+En esta imagen podemos ver como realizamos una petición usando el verbo **POST**, donde creamos un nuevo proyecto.  Recuerden enviar los datos utilizando x-www-form-urlencoded.
+
+Con esto finalizamos el tutorial de REST en laravel 5.2.  En futuros tutoriales vamos a hablar con mayor detalle del uso de REST API's y las mejores prácticas,  validaciones, paginación, transformers, documentación y otros elementos que harán nuestras API's más robustas y sencillas de consumir.
+
+Espero que les haya sido útil, y no duden en dejarnos sus consultas y comentarios debajo!
+
+##### Gracias por leernos!
+
+*Encontranos en [@coffeedevs](https://twitter.com/coffeedevs)*

@@ -1,0 +1,239 @@
+---
+title: "Laravel 6.0 - Cambios en español!"
+slug: "laravel-6-0-cambios-en-espanol"
+date: "2019-09-10"
+featured: false
+featureImage: "/content/images/2019/09/8EAfCWA.png"
+excerpt: "Laravel sacó una nueva versión de su framework, y esta vez promete seguir el"
+tags:
+  - "laravel"
+  - "6.0"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Laravel sacó una nueva versión de su framework, y esta vez promete seguir el sistema de Versionado Semántico, es decir, que sigue el siguiente formato: major.minor.patch, por lo que a partir de ahora, vamos a ver los saltos de versiones de Laravel como Laravel 7.0, Laravel 8.0 mucho más rápido.
+
+También es una versión LTS (long-term support), que viene acompañado de 2 años de soporte para bugs y 3 años para parches de seguridad. Esto puede ser de utilidad para empresas que no tienen la dinámica de estar actualizando el framework de su producto cada 6 meses, y prefieren estirar los tiempos (aunque saltar de un LTS a otro, implica un upgrade más brusco).
+
+A continuación, los cambios de la nueva versión de Laravel
+
+## Laravel 6.0
+
+Laravel 6.0 (LTS) continúa las mejoras realizadas en Laravel 5.8 mediante la introducción de versiones semánticas, compatibilidad con Laravel Vapor, respuestas de autorización mejoradas, middleware para Jobs, Collections diferidas, mejoras en sub-queries, la extracción del scaffolding frontend al paquete de Composer `laravel/ui` , y una variedad de otras correcciones de errores y mejoras de usabilidad.
+
+### Versiones Semánticas
+
+El paquete Laravel (`laravel/framework`) ahora sigue el estándar de versiones semántico. Esto hace que el marco sea coherente con los otros paquetes Laravel de origen que ya siguieron este estándar de versiones. El ciclo de lanzamiento de Laravel permanecerá sin cambios.
+
+### Compatibilidad de vapor Laravel
+
+Laravel 6.0 proporciona compatibilidad con Laravel Vapor, una plataforma de implementación *serverless* y autoescalable para Laravel. Vapor resume la complejidad de administrar las aplicaciones de Laravel en AWS Lambda, así como la interfaz de esas aplicaciones con colas SQS, bases de datos, clústeres Redis, networking, CloudFront CDN y más.
+
+### Excepciones mejoradas a través de Ignition
+
+Laravel 6.0 viene con Ignition, una nueva página de excepciones de código abierto creada por [Freek Van der Herten](http://twitter.com/freekmurze) y [Marcel Pociot](http://twitter.com/marcelpociot). Ignition ofrece muchos beneficios con respecto a versiones anteriores, como un archivo mejorado de errores de Blade y manejo de números de línea, soluciones ejecutables para problemas comunes, edición de código, uso compartido de excepciones y una experiencia de usuario mejorada.
+
+### Respuestas de autorización mejoradas
+
+En versiones anteriores de Laravel, era difícil recuperar y exponer mensajes de autorización personalizados a los usuarios finales. Esto dificultaba explicar a los usuarios finales exactamente por qué se denegó una solicitud en particular. En Laravel 6.0, ahora es mucho más fácil usar mensajes de respuesta de autorización y el nuevo método `Gate::inspect`. Por ejemplo, dado el siguiente método de política:
+
+```php
+/**
+* Determine si el usuario puede ver el vuelo dado. *
+* 
+* @param \App\User $user 
+* @param \App\Flight $flight 
+* @return mixed
+*/
+public function view(Usuario $usuario, Vuelo $vuelo) {
+    return $this->deny('Explicación de la negación');
+}
+
+```
+
+La respuesta y el mensaje de la política de autorización se pueden recuperar fácilmente utilizando el método `Gate::inspect`:
+
+```php
+$respuesta = Gate::inspect('view', $vuelo);
+
+if ($respuesta->allowed()) {    
+    // El usuario está autorizado para ver el vuelo ...
+}
+if ($respuesta->denied()) {
+    echo $respuesta->message();
+}
+
+```
+
+Además, estos mensajes personalizados se devolverán automáticamente a su interfaz cuando use métodos auxiliares como `$this->authorize` o `Gate::authorize` de sus rutas o controladores.
+
+### Job Middleware
+
+El Job Middleware te permite *envolver* lógica personalizada sobre la ejecución de los Jobs encolados, reduciendo el código repetido en los Jobs. Por ejemplo, en versiones anteriores de Laravel, podrías envolver la lógica de un Job en un callback para limitar el acceso:
+
+```php
+/**
+ * Ejecutar el trabajo.
+ *
+ * @return void
+ */
+public function handle()
+{
+    Redis::throttle('key')->block(0)->allow(1)->every(5)->then(function () {
+        info('Se obtuvo el lock...');
+
+        // Manejar el Job...
+    }, function () {
+        // No se pudo obtener el lock...
+
+        return $this->release(5);
+    });
+}
+
+```
+
+En Laravel 6.0, esta lógica se puede aplicar en un middleware de trabajo, lo que le permite mantener su trabajo libre.
+
+```php
+<?php
+
+namespace App\Jobs\Middleware;
+
+use Illuminate\Support\Facades\Redis;
+
+class RateLimited
+{
+    /**
+     * Procesar el Job encolado.
+     *
+     * @param  mixed  $job
+     * @param  callable  $next
+     * @return mixed
+     */
+    public function handle($job, $next)
+    {
+        Redis::throttle('key')
+                ->block(0)->allow(1)->every(5)
+                ->then(function () use ($job, $next) {
+                    // Se obtuvo el lock...
+
+                    $next($job);
+                }, function () use ($job) {
+                    // No se pudo obtener el lock...
+
+                    $job->release(5);
+                });
+    }
+}
+```
+
+Luego de crear un middleware, pueden adjuntarse a un `Job` retornandolo directamente desde el método `middleware`.
+
+```php
+use App\Jobs\Middleware\RateLimited;
+
+/**
+ * Elegir que middleware aplica a este Job
+ *
+ * @return array
+ */
+public function middleware()
+{
+    return [new RateLimited];
+}
+
+```
+
+### Lazy Collections
+
+Muchos desarrolladores ya disfrutan de los poderosos [métodos de colección](https://laravel.com/docs/collections) de Laravel. Para complementar la ya poderosa clase `Collection`, Laravel 6.0 presenta una colección `LazyCollection`, que aprovecha los [generadores](https://www.php.net/manual/en/language.generators.overview.php) de PHP para permitirte trabajar con grandes sets de datos mantienendo un uso bajo de memoria.
+
+Por ejemplo, imagine que su aplicación necesita procesar un *log* de varios gigabytes mientras aprovecha los métodos de `Collection` de Laravel para analizar los registros. En lugar de leer todo el archivo en memoria a la vez, se pueden usar `LazyCollections` para mantener solo una pequeña parte del archivo en la memoria en un momento dado:
+
+```php
+use App\LogEntry;
+use Illuminate\Support\LazyCollection;
+
+LazyCollection::make(function () {
+    $handle = fopen('log.txt', 'r');
+
+    while (($line = fgets($handle)) !== false) {
+        yield $line;
+    }
+})
+->chunk(4)
+->map(function ($lines) {
+    return LogEntry::fromLines($lines);
+})
+->each(function (LogEntry $logEntry) {
+    // Procesar el log...
+});
+
+```
+
+O imagine que necesita recorrer 10.000 modelos `Eloquent`. Cuando se usan colecciones tradicionales de Laravel, todos los 10,000 modelos Eloquent deben cargarse en la memoria al mismo tiempo:
+
+```php
+$users = App\User::all()->filter(function ($user) {
+    return $user->id > 500;
+});
+
+```
+
+Sin embargo, a partir de Laravel 6.0, el método `cursor` del `QueryBuilder` se ha actualizado para devolver una instancia de `LazyCollection`. Un modelo `Eloquent` cargado en la memoria a la vez. En este ejemplo, la devolución de `filter` no se ejecuta hasta que iteramos sobre cada usuario individualmente, lo que permite una reducción drástica en el uso de la memoria:
+
+```php
+$users = App\User::cursor()->filter(function ($user) {
+    return $user->id > 500;
+});
+
+foreach ($users as $user) {
+    echo $user->id;
+}
+
+```
+
+### Mejoras en sub-queries de Eloquent
+
+Laravel 6.0 presenta varias correcciones y mejoras nuevas para el soporte de subconsultas de bases de datos. Por ejemplo, imaginemos que tenemos una tabla `destinations` (destinos) y una tabla de `flights` (vuelos).
+
+Usando la nueva funcionalidad de selección de subconsulta en Laravel 6.0, podemos seleccionar todos los destinos y el vuelo más reciente que ha llegado a ese destino utilizando una sola consulta:
+
+```php
+return Destination::addSelect(['last_flight' => Flight::select('name')
+    ->whereColumn('destination_id', 'destinations.id')
+    ->orderBy('arrived_at', 'desc')
+    ->limit(1)
+])->get();
+
+```
+
+Además, podemos usar nuevas características de subconsulta agregadas a la función `orderBy` del generador de consultas. Nuevamente, esto se puede hacer mientras se ejecuta una única consulta en la base de datos:
+
+```php
+return Destino::orderByDesc(
+    Vuelo::select('arrived_at')
+        ->whereColumn('destination_id', 'destinations.id')
+        ->orderBy('arrived_at', 'desc')
+        ->limit(1)
+)->get();
+
+```
+
+### Laravel UI
+
+El *scaffolding* frontend que normalmente se proporciona con versiones anteriores de Laravel se ha extraído en un paquete de `laravel/ui`. Esto permite que el *scaffolding* de interfaz de usuario se desarrolle y versione por separado del *framework*. Como resultado de este cambio, no hay código Bootstrap o Vue presente en el *scaffolding* predeterminado del *framework*, y el comando `make:auth` también se ha extraído del *framework*.
+
+Para restaurar el *scaffolding* Vue/Bootstrap tradicional presente en versiones anteriores de Laravel, hay que instalar el paquete `laravel/ui` y usar el comando `artisan ui` para instalar el *scaffolding* frontend:
+
+```
+composer require laravel/ui
+
+php artisan ui vue --auth
+
+```
