@@ -108,14 +108,50 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
     notFound();
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: postData.title,
+    description: postData.excerpt,
+    image: postData.featureImage
+      ? `${SITE_URL}${postData.featureImage}`
+      : `${SITE_URL}/content/images/2018/06/background.jpg`,
+    datePublished: postData.date,
+    author: {
+      "@type": "Person",
+      name: postData.author.name,
+      url: postData.author.website,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "CoffeeDevs",
+      url: "https://coffeedevs.com",
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/content/images/size/w100/2020/07/JhjFSCA5_400x400.jpg`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/${postData.slug}/`,
+    },
+    inLanguage: "es",
+  };
+
   return (
-    <PostLayout title={postData.title} featureImage={postData.featureImage} slug={postData.slug}>
-      <PostArticle
-        articleMdx={postData.articleMdx}
-        title={postData.title}
-        slug={postData.slug}
-        author={postData.author}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-    </PostLayout>
+      <PostLayout title={postData.title} featureImage={postData.featureImage} slug={postData.slug}>
+        <PostArticle
+          articleMdx={postData.articleMdx}
+          title={postData.title}
+          slug={postData.slug}
+          author={postData.author}
+        />
+      </PostLayout>
+    </>
   );
 }
