@@ -40,9 +40,43 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "CoffeeDevs",
+    url: "https://coffeedevs.com",
+    logo: "https://blog.coffeedevs.com/content/images/size/w100/2020/07/JhjFSCA5_400x400.jpg",
+    sameAs: [
+      "https://blog.coffeedevs.com",
+      "https://www.facebook.com/coffeedevs",
+      "https://twitter.com/coffeedevs",
+    ],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Café de por medio",
+    url: "https://blog.coffeedevs.com",
+    publisher: {
+      "@type": "Organization",
+      name: "CoffeeDevs",
+      url: "https://coffeedevs.com",
+    },
+    inLanguage: "es",
+  };
+
   return (
     <html lang="es" className={sourceSans.className}>
       <body className="home-template">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         {children}
       </body>
     </html>
