@@ -1,0 +1,185 @@
+---
+title: "Laravel 10 - Cambios en español"
+slug: "laravel-10-cambios-en-espanol"
+date: "2023-02-21"
+featured: true
+featureImage: "/content/images/2022/03/1642886183973.png"
+excerpt: "Laravel 10"
+tags:
+  - "laravel"
+  - "php"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+## Laravel 10
+
+Laravel 10 continua las mejoras realizadas en Laravel 9.x introduciendo declaraciones de tipos nativos en todos los métodos del esqueleto de la aplicación, una nueva capa de abstracción para interactuar con procesos externos, Laravel Pennant para el manejo de feature flags, y una variedad de otras correcciones y mejoras de usabilidad.
+
+### PHP 8.1
+
+Laravel 10.x requiere mínimo PHP 8.1. Se elimina el soporte para PHP 8.0, que ya llegó a su fin de vida.
+
+### Declaraciones de tipo nativas
+
+Laravel 10.x introduce declaraciones de tipos de argumentos y valores de retorno en todos los métodos del esqueleto de la aplicación y en todos los archivos stub utilizados para generar clases a lo largo del framework. Además, se eliminó la información redundante de "doc block" que duplicaba las declaraciones de tipo.
+
+Este cambio es completamente compatible con las aplicaciones existentes. Por lo tanto, las aplicaciones que no tengan estas declaraciones de tipo seguirán funcionando normalmente.
+
+### Laravel Pennant
+
+Laravel Pennant es un nuevo paquete de primera parte que ofrece un enfoque liviano y directo para manejar las "feature flags" de tu aplicación. Pennant incluye de fábrica un driver en memoria y un driver de base de datos para el almacenamiento persistente de las flags.
+
+Las features se pueden definir fácilmente mediante el método `Feature::define`:
+
+```php
+<?php
+
+use Illuminate\Support\Lottery;
+use Laravel\Pennant\Feature;
+
+Feature::define('new-onboarding-flow', function () {
+    return Lottery::odds(1, 10);
+});
+
+```
+
+Una vez que se define una feature, puedes determinar fácilmente si el usuario actual tiene acceso:
+
+```php
+<?php
+
+use Laravel\Pennant\Feature;
+
+if (Feature::active('new-onboarding-flow')) {
+    // ...
+}
+
+```
+
+También existe una directiva de Blade para simplificar el uso en las vistas:
+
+```blade
+@feature('new-onboarding-flow')
+    <div>
+        <!-- ... -->
+    </div>
+@endfeature
+```
+
+Pennant ofrece una variedad de características más avanzadas y APIs. Para obtener más información, consultá la documentación completa de Pennant.
+
+### Capa de abstracción para Procesos
+
+Laravel 10.x introduce una capa de abstracción para iniciar e interactuar con procesos externos a través de la nueva fachada `Process`:
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Process;
+
+$result = Process::run('ls -la');
+
+$result->successful();
+$result->failed();
+$result->exitCode();
+$result->output();
+$result->errorOutput();
+
+```
+
+Los procesos se pueden incluso ejecutar de forma concurrente usando pools:
+
+```php
+<?php
+
+use Illuminate\Process\Pool;
+use Illuminate\Support\Facades\Process;
+
+$pool = Process::pool(function (Pool $pool) {
+    $pool->path(__DIR__)->command('bash import-1.sh');
+    $pool->path(__DIR__)->command('bash import-2.sh');
+    $pool->path(__DIR__)->command('bash import-3.sh');
+});
+
+$results = $pool->start()->wait();
+
+```
+
+Además, para facilitar las pruebas, los procesos se pueden simular de manera conveniente:
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Process;
+
+Process::fake();
+
+// ...
+
+Process::assertRan('ls -la');
+
+```
+
+Para obtener más información, consultá la documentación completa sobre procesos.
+
+### Reglas de validación invocables
+
+Las reglas de validación invocables son ahora el comportamiento por defecto al crear una regla con el comando `make:rule` de Artisan. En Laravel 9, era necesario pasar el flag `--invokable` al crear una regla.
+
+Ahora las nuevas reglas implementan `Illuminate\Contracts\Validation\ValidationRule` y definen un método `validate`:
+
+```php
+<?php
+
+namespace App\Rules;
+
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
+
+class Uppercase implements ValidationRule
+{
+    /**
+     * Run the validation rule.
+     */
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        if (strtoupper($value) !== $value) {
+            $fail('El :attribute debe estar en mayúsculas.');
+        }
+    }
+}
+
+```
+
+### Scaffolding con Pest
+
+Los nuevos proyectos de Laravel ahora pueden crearse con scaffolding de pruebas basado en Pest por defecto. Para activar esta función, hay que proporcionar el flag `--pest` al crear una nueva aplicación con el instalador de Laravel:
+
+```bash
+laravel new example-application --pest
+```
+
+### Prompts interactivos en comandos generadores
+
+Para mejorar la experiencia de desarrollo, todos los comandos `make` integrados en Laravel ya no requieren argumentos de entrada. Si los comandos se invocan sin argumentos, se te solicitarán los valores requeridos de manera interactiva:
+
+```bash
+php artisan make:controller
+```
+
+### Rediseño de Horizon y Telescope
+
+Horizon y Telescope se han actualizado con un diseño fresco y moderno que incluye mejoras en la tipografía, el espaciado y el diseño general.
+
+### Soporte para PHPUnit 10
+
+Laravel 10 introduce soporte para PHPUnit 10, mientras mantiene compatibilidad con PHPUnit 9 y 8.
+
+### Mejoras de seguridad en Timebox
+
+Laravel 10 incluye mejoras de seguridad en la clase `Timebox`, que busca proteger la aplicación contra ataques de temporización. La clase Timebox, implementada dentro del método `hasValidCredentials`, ahora tiene soporte para manejar excepciones lanzadas durante la ejecución del callback.

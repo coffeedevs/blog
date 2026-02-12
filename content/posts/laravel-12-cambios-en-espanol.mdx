@@ -1,0 +1,104 @@
+---
+title: "Laravel 12 - Cambios en español"
+slug: "laravel-12-cambios-en-espanol"
+date: "2025-03-03"
+featured: true
+featureImage: "/content/images/2022/03/1642886183973.png"
+excerpt: "Laravel 12"
+tags:
+  - "laravel"
+  - "php"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+## Laravel 12
+
+A diferencia de los lanzamientos anteriores, Laravel 12 es un lanzamiento de mantenimiento relativamente menor. El equipo de Laravel dedicó este ciclo a minimizar los cambios que rompen compatibilidad, enfocándose en mejoras continuas de calidad de vida que no afectan aplicaciones existentes. La mayoría de las aplicaciones pueden actualizarse a Laravel 12 sin necesidad de modificar código.
+
+Laravel 12 sigue las mejoras realizadas en Laravel 11.x actualizando dependencias e introduciendo nuevos starter kits para React, Vue y Livewire, incluyendo la opción de usar WorkOS AuthKit para la autenticación de usuarios.
+
+### PHP 8.2
+
+Laravel 12.x requiere PHP 8.2 como mínimo y soporta hasta PHP 8.4.
+
+### Nuevos Starter Kits
+
+El cambio más notable en Laravel 12 son los nuevos starter kits que reemplazan a Breeze y Jetstream. En lugar de instalar un paquete después de crear tu proyecto, ahora elegís una plantilla completa antes de que se ejecute el instalador, y la CLI genera una base de código completa (frontend y backend) lista para usar.
+
+Hay tres opciones de starter kit disponibles:
+
+#### React Starter Kit
+
+El starter kit de React utiliza React 19, TypeScript, Tailwind CSS y la librería de componentes shadcn/ui. Aprovecha Inertia.js para el enrutamiento tipo SPA mientras mantiene la productividad del backend de Laravel:
+
+```bash
+laravel new mi-proyecto
+// Seleccionar "React" cuando se solicite
+```
+
+#### Vue Starter Kit
+
+El starter kit de Vue ofrece un excelente punto de partida usando Vue con Inertia. Utiliza la Composition API de Vue, TypeScript, Tailwind CSS y la librería de componentes shadcn-vue:
+
+```bash
+laravel new mi-proyecto
+// Seleccionar "Vue" cuando se solicite
+```
+
+#### Livewire Starter Kit
+
+Para equipos que prefieren un enfoque centrado en PHP, el starter kit de Livewire utiliza Livewire, TypeScript, Tailwind CSS y la librería de componentes Flux UI:
+
+```bash
+laravel new mi-proyecto
+// Seleccionar "Livewire" cuando se solicite
+```
+
+### WorkOS AuthKit
+
+Además de la autenticación integrada de Laravel, cada starter kit tiene una variante con WorkOS AuthKit que ofrece autenticación social (Google, Microsoft, GitHub y Apple), passkeys y soporte para SSO. WorkOS ofrece autenticación gratuita para aplicaciones con hasta un millón de usuarios activos mensuales.
+
+Para usar WorkOS como proveedor de autenticación, se selecciona la opción WorkOS al crear la aplicación. Luego se deben configurar las variables de entorno correspondientes:
+
+```env
+WORKOS_CLIENT_ID=tu-client-id
+WORKOS_API_KEY=tu-api-key
+WORKOS_REDIRECT_URL=tu-redirect-url
+```
+
+### Starter Kits de la comunidad
+
+Al crear una nueva aplicación, ahora se puede usar el flag `--using` para especificar un starter kit mantenido por la comunidad y disponible en Packagist:
+
+```bash
+laravel new mi-proyecto --using=vendor/paquete
+```
+
+### Características comunes de los Starter Kits
+
+Todos los starter kits comparten una serie de características comunes:
+
+- Soporte completo de TypeScript en los kits de React y Vue
+- Modo claro, oscuro y del sistema por defecto
+- Workflows de GitHub Actions para testing y linting automatizado
+- Construidos con las últimas clases de Tailwind CSS
+- Login, registro, recuperación de contraseña y verificación de email
+
+### Caché asíncrono
+
+Una de las mejoras destacadas en rendimiento es el caché asíncrono. En versiones anteriores, las operaciones de caché eran sincrónicas, lo que podía ralentizar la aplicación cuando el tráfico aumentaba. Ahora, Laravel maneja las llamadas frecuentes al caché de forma más eficiente, reduciendo tiempos de espera y mejorando la velocidad de respuesta.
+
+### Server-Side Rendering (SSR)
+
+Los starter kits de React y Vue son compatibles con las capacidades de Server-Side Rendering de Inertia. Para compilar un bundle compatible con SSR:
+
+```bash
+npm run build:ssr
+```
+
+También existe un comando de conveniencia `composer dev:ssr` que inicia el servidor de desarrollo de Laravel y el servidor SSR de Inertia después de compilar el bundle.
