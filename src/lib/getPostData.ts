@@ -48,6 +48,11 @@ export interface PostData {
   author: Author;
 }
 
+export interface TagInfo {
+  name: string;
+  slug: string;
+}
+
 export interface PostMeta {
   title: string;
   slug: string;
@@ -56,6 +61,7 @@ export interface PostMeta {
   featureImage?: string;
   featured?: boolean;
   readingTime?: number;
+  tags?: string[];
 }
 
 export async function getPostData(slug: string[]): Promise<PostData | null> {
@@ -125,6 +131,7 @@ export async function getAllPosts(): Promise<PostMeta[]> {
             featureImage: data.featureImage || "",
             featured: data.featured || false,
             readingTime: calculateReadingTime(content),
+            tags: Array.isArray(data.tags) ? data.tags : undefined,
           };
         })
     );
@@ -135,4 +142,15 @@ export async function getAllPosts(): Promise<PostMeta[]> {
     console.error("Error reading posts directory", e);
     return [];
   }
+}
+
+export async function getAllTags(): Promise<TagInfo[]> {
+  const tagsPath = path.join(process.cwd(), "content", "tags.json");
+  const tagsContent = await fs.readFile(tagsPath, "utf-8");
+  return JSON.parse(tagsContent);
+}
+
+export async function getPostsByTag(tagSlug: string): Promise<PostMeta[]> {
+  const posts = await getAllPosts();
+  return posts.filter((post) => post.tags?.includes(tagSlug));
 }

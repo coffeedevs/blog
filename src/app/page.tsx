@@ -20,7 +20,7 @@ function transformPostsForComponents(posts: PostMeta[]) {
       profile_image: "/content/images/size/w100/2020/07/JhjFSCA5_400x400.jpg",
       slug: "facundo"
     },
-    primary_tag: { name: "desarrollo", slug: "desarrollo" },
+    primary_tag: post.tags?.[0] ? { name: post.tags[0], slug: post.tags[0] } : null,
     published_at: new Date(post.date).toISOString(),
     reading_time: post.readingTime || 1, // Use calculated reading time from full content
     featured: post.featured || false
