@@ -1,0 +1,250 @@
+---
+title: "Laravel 11 - Cambios en español"
+slug: "laravel-11-cambios-en-espanol"
+date: "2024-03-19"
+featured: true
+featureImage: "/content/images/2022/03/1642886183973.png"
+excerpt: "Laravel 11"
+tags:
+  - "laravel"
+  - "php"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+## Laravel 11
+
+Laravel 11 sigue las mejoras introducidas en Laravel 10.x presentando una estructura de aplicación simplificada, limitación de peticiones por segundo, routing de salud, rotación de claves de encriptación, mejoras en las pruebas de colas, el servidor WebSocket de primera parte Reverb, SQLite como base de datos por defecto, y una variedad de otras correcciones y mejoras de usabilidad.
+
+### PHP 8.2
+
+Laravel 11.x requiere mínimo PHP 8.2.
+
+### Estructura de aplicación simplificada
+
+Uno de los cambios más significativos de Laravel 11 es la estructura de aplicación simplificada para proyectos nuevos. La nueva estructura está diseñada para ser más liviana y alineada con las prácticas modernas de desarrollo, sin dejar de lado los conceptos que los desarrolladores de Laravel ya conocen.
+
+El directorio `app` fue simplificado de manera considerable: se eliminaron los kernels HTTP y de consola, se redujo el directorio `Providers` a un único proveedor, y los nueve middlewares que rara vez se personalizaban se movieron directamente al framework.
+
+### Nuevo archivo bootstrap/app.php
+
+El archivo `bootstrap/app.php` ahora funciona como el archivo central de configuración de la aplicación. Desde este único punto, podés personalizar el enrutamiento, middleware, proveedores de servicio y manejo de excepciones:
+
+```php
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        //
+    })
+    ->withExceptions(function ($exceptions) {
+        //
+    })
+    ->create();
+
+```
+
+### Un único Service Provider
+
+En lugar de la estructura por defecto de Laravel que incluía cinco proveedores de servicio, Laravel 11 solamente incluye un `AppServiceProvider`. La funcionalidad de los proveedores anteriores fue incorporada en `bootstrap/app.php`, es manejada automáticamente por el framework, o puede colocarse en el `AppServiceProvider` de tu aplicación.
+
+### Rutas API y Broadcasting opcionales
+
+No todas las aplicaciones necesitan rutas de API y broadcasting. Laravel 11 reconoce esto al no incluir los archivos `api.php` y `channels.php` por defecto. Se pueden agregar fácilmente mediante comandos de Artisan:
+
+```bash
+php artisan install:api
+
+php artisan install:broadcasting
+```
+
+El comando `install:api` genera el archivo de rutas API e instala Laravel Sanctum automáticamente.
+
+### Middleware integrado en el framework
+
+En versiones anteriores de Laravel, la aplicación incluía varios middleware por defecto. En Laravel 11, estos middleware se movieron al framework mismo, eliminando la redundancia y simplificando la estructura de la aplicación.
+
+### Eliminación del Console Kernel
+
+Las tareas programadas ahora se pueden definir directamente en el archivo `routes/console.php` usando la nueva fachada `Schedule`, simplificando la gestión de tareas programadas. Ya no es necesario tener un kernel de consola:
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('emails:send')->daily();
+Schedule::command('reports:generate')->weekly();
+
+```
+
+### Manejo de excepciones en bootstrap/app.php
+
+El manejo de excepciones fue reimaginado y ahora es personalizable directamente desde el archivo `bootstrap/app.php`. Esto consolida significativamente la cantidad de archivos en una nueva aplicación de Laravel y centraliza la gestión de excepciones:
+
+```php
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->dontReport(SomeException::class);
+
+        $exceptions->report(function (SomeException $e) {
+            // ...
+        });
+    })
+    ->create();
+
+```
+
+### SQLite como base de datos por defecto
+
+Las nuevas aplicaciones de Laravel 11 usan SQLite por defecto para almacenamiento de base de datos y para el driver de sesiones, caché y colas. Esto permite a los desarrolladores empezar a trabajar en sus proyectos inmediatamente después de la instalación sin necesidad de software adicional.
+
+### Laravel Reverb
+
+Laravel Reverb es un servidor WebSocket de primera parte que ofrece comunicación en tiempo real de alta performance y escalabilidad directamente en tu aplicación Laravel. Se integra de forma nativa con las herramientas de broadcasting de eventos existentes, como Laravel Echo.
+
+```bash
+php artisan install:broadcasting
+```
+
+Reverb soporta escalamiento horizontal a través de la funcionalidad pub/sub de Redis, permitiendo distribuir el tráfico WebSocket entre múltiples servidores backend de Reverb, todo respaldado por una única aplicación de alta demanda.
+
+### Limitación de peticiones por segundo
+
+Laravel 11 agrega la posibilidad de establecer límites de peticiones por segundo, tanto para solicitudes HTTP como para trabajos en cola:
+
+```php
+<?php
+
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+
+RateLimiter::for('invoices', function ($request) {
+    return Limit::perSecond(1);
+});
+
+```
+
+### Ruta de Health Check
+
+Las nuevas aplicaciones de Laravel 11 incluyen una directiva de enrutamiento de salud que define un endpoint simple de health-check. Este endpoint puede ser utilizado por servicios de monitoreo de terceros o por sistemas de orquestación como Kubernetes:
+
+```php
+<?php
+
+use Illuminate\Foundation\Application;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        health: '/up',
+    )
+    ->create();
+
+```
+
+Al acceder a la ruta `/up`, se despacha un evento `DiagnosingHealth`, permitiéndote hacer verificaciones adicionales de salud relevantes a tu aplicación.
+
+### Casts de modelos como métodos
+
+En Laravel 11, los casts se definen usando un método en lugar de una propiedad, lo que proporciona una forma más limpia y fluida de castear atributos, especialmente cuando se usan casts con argumentos:
+
+```php
+<?php
+
+use App\Enums\ServerStatus;
+
+/**
+ * Get the attributes that should be cast.
+ *
+ * @return array<string, string>
+ */
+protected function casts(): array
+{
+    return [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'status' => ServerStatus::class,
+    ];
+}
+
+```
+
+### Helper once()
+
+La función `once` ejecuta un callback y almacena el resultado en memoria durante toda la duración del request, evitando cálculos repetidos:
+
+```php
+<?php
+
+function random(): int
+{
+    return once(function () {
+        return random_int(1, 1000);
+    });
+}
+
+random(); // 123
+random(); // 123 (resultado cacheado)
+random(); // 123 (resultado cacheado)
+
+```
+
+### Rotación de clave de encriptación
+
+En versiones anteriores de Laravel, cambiar el `APP_KEY` podía romper los datos encriptados en la base de datos. Laravel 11 introduce una rotación elegante a través de la variable de entorno `APP_PREVIOUS_KEYS`. Laravel usará automáticamente la nueva clave para encriptar datos y las claves anteriores para desencriptar datos existentes:
+
+```env
+APP_KEY="base64:nueva-clave..."
+APP_PREVIOUS_KEYS="base64:clave-anterior..."
+```
+
+### Trait Dumpable
+
+Laravel 11 incluye un nuevo trait `Dumpable` que permite agregar los métodos `dd` y `dump` a cualquier clase personalizada:
+
+```php
+<?php
+
+use Illuminate\Support\Traits\Dumpable;
+
+class MiClase
+{
+    use Dumpable;
+
+    // ...
+}
+
+$miClase = new MiClase();
+$miClase->dump();
+$miClase->dd();
+
+```
+
+### Nuevos comandos Artisan
+
+Laravel 11 introduce nuevos comandos Artisan para crear clases, enums, interfaces y traits:
+
+```bash
+php artisan make:class MiClase
+php artisan make:enum MiEnum
+php artisan make:interface MiInterface
+php artisan make:trait MiTrait
+```
