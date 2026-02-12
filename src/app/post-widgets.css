@@ -193,6 +193,66 @@
   }
 }
 
+/* Hire CTA */
+
+.m-hire-cta {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.m-hire-cta__content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.m-hire-cta__title {
+  color: #fff;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0 0 12px;
+}
+
+.m-hire-cta__description {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0 0 24px;
+}
+
+.m-hire-cta__button {
+  display: inline-block;
+  background: #0470ee;
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.m-hire-cta__button:hover {
+  background: #0358c1;
+}
+
+@media only screen and (min-width: 768px) {
+  .m-hire-cta {
+    padding: 60px 40px;
+  }
+
+  .m-hire-cta__content {
+    padding: 40px 48px;
+  }
+
+  .m-hire-cta__title {
+    font-size: 1.5rem;
+  }
+}
+
 /* Dark mode support */
 
 @media (prefers-color-scheme: dark) {

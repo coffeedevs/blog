@@ -17,7 +17,8 @@ export default function Footer() {
         </nav>
         
         <p className="m-footer-copyright">
-          <span>Café de por medio &copy; 2022</span>
+          <span>Café de por medio &copy; {new Date().getFullYear()}</span>
+          <span> &mdash; Un blog de <a href="https://coffeedevs.com" rel="noopener">CoffeeDevs</a></span>
         </p>
       </div>
     </footer>

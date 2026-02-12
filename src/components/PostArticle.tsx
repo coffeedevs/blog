@@ -1,5 +1,6 @@
 import MDXContent from './MDXContent';
 import AuthorWidget from './AuthorWidget';
+import HireCTA from './HireCTA';
 import DisqusComments from './DisqusComments';
 import RecommendedPosts from './RecommendedPosts';
 import '../app/post-content.css';
@@ -38,6 +39,8 @@ export default async function PostArticle({
       </div>
 
       <AuthorWidget author={author} />
+
+      <HireCTA />
 
       <div className="l-wrapper in-comments">
         <DisqusComments slug={slug} title={title} />
