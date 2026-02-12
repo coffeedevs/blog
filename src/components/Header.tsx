@@ -55,9 +55,9 @@ export default function Header() {
                         <section className="m-tags">
                           <h3 className="m-submenu-title">Etiquetas</h3>
                           <ul>
-                            <li><a href="/tag/laravel/">laravel</a></li>
-                            <li><a href="/tag/api/">api</a></li>
-                            <li><a href="/tag/blade/">blade</a></li>
+                            <li><Link href="/tag/laravel/">laravel</Link></li>
+                            <li><Link href="/tag/api/">api</Link></li>
+                            <li><Link href="/tag/blade/">blade</Link></li>
                           </ul>
                         </section>
                       </div>

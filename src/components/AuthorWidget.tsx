@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 interface Author {
   name: string;
   slug: string;

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllPosts, PostMeta, transformImagePath } from '@/lib/getPostData';
+import { getAllPosts, transformImagePath } from '@/lib/getPostData';
 
 interface RecommendedPostsProps {
   currentSlug: string;

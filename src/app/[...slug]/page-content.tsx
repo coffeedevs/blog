@@ -14,7 +14,7 @@ export default async function PageContent({ slug }: PageContentProps) {
     const $ = cheerio.load(html);
     const bodyContent = $("body").html();
     return <div dangerouslySetInnerHTML={{ __html: bodyContent || "" }} />;
-  } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  } catch {
     // Handle error, e.g., return a specific error message or null
     return <div>Error loading page content.</div>;
   }

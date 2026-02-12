@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Footer() {
   return (
     <footer className="m-footer">
@@ -9,9 +11,9 @@ export default function Footer() {
           <a href="https://twitter.com/coffeedevs" target="_blank" rel="noopener" aria-label="Twitter">
             <span className="icon-twitter" aria-hidden="true"></span>
           </a>
-          <a href="/rss" aria-label="RSS">
+          <Link href="/rss" aria-label="RSS">
             <span className="icon-rss" aria-hidden="true"></span>
-          </a>
+          </Link>
         </nav>
         
         <p className="m-footer-copyright">
