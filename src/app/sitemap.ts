@@ -19,6 +19,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
+  const authorEntries: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/author/facundo/`,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+  ];
+
   return [
     {
       url: SITE_URL,
@@ -27,5 +35,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...postEntries,
     ...tagEntries,
+    ...authorEntries,
   ];
 }

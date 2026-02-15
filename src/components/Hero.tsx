@@ -21,6 +21,8 @@ export default function Hero({ title, featureImage, showContent = true, descript
           alt={title || defaultTitle}
           width={2000}
           height={1280}
+          sizes="100vw"
+          fetchPriority="high"
           priority
         />
       </div>

@@ -9,6 +9,7 @@ interface Article {
   author: {
     name: string;
     profile_image: string;
+    slug: string;
   };
   primary_tag: {
     name: string;
@@ -52,7 +53,7 @@ export default function ArticleGrid({ articles }: ArticleGridProps) {
             />
             
             <Link 
-              href={`/author/${article.author.name.toLowerCase()}/`} 
+              href={`/author/${article.author.slug}/`} 
               className="m-article-card__author js-tooltip" 
               aria-label={article.author.name} 
               data-tippy-content={`Publicado por ${article.author.name}`}

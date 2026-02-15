@@ -58,10 +58,57 @@ export interface PostMeta {
   slug: string;
   date: string;
   excerpt: string;
+  author: {
+    name: string;
+    slug: string;
+  };
   featureImage?: string;
   featured?: boolean;
   readingTime?: number;
   tags?: string[];
+}
+
+function stripMarkdown(content: string): string {
+  return content
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`]*`/g, " ")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s*>\s?/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function truncateForDescription(value: string, maxLength: number = 160): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  const truncated = value.slice(0, maxLength);
+  const lastSpaceIndex = truncated.lastIndexOf(" ");
+  if (lastSpaceIndex < 120) {
+    return `${truncated.trim()}…`;
+  }
+
+  return `${truncated.slice(0, lastSpaceIndex).trim()}…`;
+}
+
+function buildSeoDescription(excerpt: string, content: string): string {
+  const normalizedExcerpt = excerpt.trim();
+  if (normalizedExcerpt.length >= 40) {
+    return truncateForDescription(normalizedExcerpt);
+  }
+
+  const fallback = stripMarkdown(content);
+  if (fallback.length > 0) {
+    return truncateForDescription(fallback);
+  }
+
+  return "Tutoriales, guías y experiencias sobre desarrollo de Software.";
 }
 
 export async function getPostData(slug: string[]): Promise<PostData | null> {
@@ -73,9 +120,10 @@ export async function getPostData(slug: string[]): Promise<PostData | null> {
     const { data, content } = matter(fileContent);
 
     // Extract author data from frontmatter
+    const normalizedAuthorSlug = data.author?.slug || "facundo";
     const author: Author = {
       name: data.author?.name || "Facundo Goñi",
-      slug: data.author?.slug || "facundo-goni",
+      slug: normalizedAuthorSlug,
       twitter: data.author?.twitter || "@facundofarias",
       website: data.author?.website || "https://facundofarias.com.ar",
       avatar: transformImagePath(data.author?.avatar || "/content/images/2018/06/facundo.jpg", 100),
@@ -88,7 +136,7 @@ export async function getPostData(slug: string[]): Promise<PostData | null> {
       articleMdx: content,
       slug: data.slug || postSlug,
       date: data.date || "",
-      excerpt: data.excerpt || "",
+      excerpt: buildSeoDescription(data.excerpt || "", content),
       author,
     };
   } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -136,6 +184,10 @@ export async function getAllPosts(options?: { query?: string }): Promise<PostMet
             slug: data.slug || name.replace(/\.mdx$/, ""),
             date: data.date || "",
             excerpt: data.excerpt || "",
+            author: {
+              name: data.author?.name || "Facundo Goñi",
+              slug: data.author?.slug || "facundo",
+            },
             featureImage: data.featureImage || "",
             featured: data.featured || false,
             readingTime: calculateReadingTime(content),
