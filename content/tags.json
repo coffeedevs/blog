@@ -282,5 +282,17 @@
   {
     "name": "9",
     "slug": "9"
+  },
+  {
+    "name": "terminal",
+    "slug": "terminal"
+  },
+  {
+    "name": "cmux",
+    "slug": "cmux"
+  },
+  {
+    "name": "ia",
+    "slug": "ia"
   }
 ]

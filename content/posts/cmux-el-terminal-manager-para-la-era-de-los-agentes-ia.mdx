@@ -1,0 +1,195 @@
+---
+title: "Cmux: el terminal manager para la era de los agentes IA"
+slug: "cmux-el-terminal-manager-para-la-era-de-los-agentes-ia"
+date: "2026-03-13"
+featured: true
+featureImage: "/content/images/2026/03/cmux-hero.png"
+excerpt: "Cmux es una terminal nativa para macOS construida sobre Ghostty que organiza tus proyectos con tabs verticales, paneles divididos, un browser integrado y notificaciones inteligentes. Ideal para trabajar con múltiples agentes de IA en paralelo."
+tags:
+  - "productividad"
+  - "terminal"
+  - "cmux"
+  - "ia"
+  - "organizacion"
+author:
+  name: "Facundo Goñi"
+  slug: "facundo"
+  twitter: "@gonifacundo"
+  website: "https://facundogoni.com.ar/"
+  avatar: "/content/images/2020/07/JhjFSCA5_400x400.jpg"
+---
+
+Si trabajás con varios proyectos al mismo tiempo y además usás agentes de IA como Claude Code, Codex o Gemini CLI, probablemente tu terminal sea un caos de tabs y ventanas. Yo estuve ahí, alternando entre sesiones de tmux, perdiendo el contexto de qué terminal correspondía a cada proyecto, y sin una forma clara de saber cuándo un agente necesitaba mi atención.
+
+Ahí es donde entra [cmux](https://www.cmux.dev/): una terminal nativa para macOS construida sobre **Ghostty** que cambia completamente la forma de trabajar con múltiples proyectos y agentes de IA.
+
+## ¿Qué es cmux?
+
+cmux es una aplicación nativa de macOS, escrita en Swift y AppKit, que usa **libghostty** como motor de renderizado de terminal (el mismo que usa Ghostty). No es un wrapper ni un plugin: es una app independiente que toma lo mejor de Ghostty y le agrega una capa de organización y automatización pensada para el flujo de trabajo moderno.
+
+Su filosofía es interesante: **cmux es una primitiva, no una solución**. Te da los bloques de construcción (terminal, browser, notificaciones, workspaces, splits y un CLI) sin imponerte un flujo de trabajo específico.
+
+## Instalación
+
+Podemos instalarlo de dos formas:
+
+**Descarga directa**: Bajando el `.dmg` desde [cmux.dev](https://www.cmux.dev/) y arrastrándolo a Aplicaciones. Se auto-actualiza via Sparkle.
+
+**Homebrew**:
+
+```bash
+brew tap manaflow-ai/cmux
+brew install --cask cmux
+```
+
+Al abrirlo por primera vez, el CLI se instala automáticamente.
+
+## La jerarquía de cmux
+
+Para entender cómo funciona cmux, es importante conocer su estructura:
+
+- **Window**: una ventana de macOS con su propio sidebar
+- **Workspace**: cada entrada en el sidebar, que contiene paneles divididos
+- **Pane**: una región dentro del workspace (producto de los splits)
+- **Surface**: una pestaña individual dentro de un pane (terminal o browser)
+
+Esta organización te permite tener, por ejemplo, un workspace por proyecto, cada uno con sus propios splits y tabs internos.
+
+## Tabs verticales: todo a la vista
+
+El sidebar izquierdo es el corazón de cmux. Cada workspace muestra de un vistazo:
+
+- La **rama de git** activa
+- El **directorio de trabajo**
+- Los **puertos** en los que escucha tu servidor
+- El **estado del PR** vinculado
+- La última **notificación** del agente
+
+Esto es un cambio enorme con respecto a una terminal tradicional. En vez de hacer `pwd` o `git branch` para recordar dónde estás, toda esa información está siempre visible en el sidebar.
+
+## Split panes: múltiples terminales organizadas
+
+Dividir paneles es tan simple como:
+
+- `⌘+D` para dividir a la derecha
+- `⌘+⇧+D` para dividir hacia abajo
+- `⌥+⌘+←/→/↑/↓` para navegar entre paneles
+
+Esto te permite tener, por ejemplo, tu agente de IA corriendo en un panel, el servidor de desarrollo en otro, y los logs en un tercero, todo dentro del mismo workspace.
+
+## Browser integrado
+
+Una de las features más interesantes es el **browser integrado**. Podés abrir un navegador al lado de tu terminal con:
+
+- `⌥+⌘+D` para abrir un browser a la derecha
+- `⌥+⌘+⇧+D` para abrirlo abajo
+
+Pero lo realmente poderoso es que el browser es **scriptable**. Los agentes de IA pueden interactuar con él: navegar páginas, capturar el DOM, hacer click en elementos, llenar formularios y ejecutar JavaScript. Esto abre un mundo de posibilidades para automatización y testing.
+
+## Notificaciones inteligentes
+
+¿Alguna vez dejaste un agente de IA trabajando y te olvidaste de volver a revisar? cmux resuelve esto con un sistema de notificaciones completo:
+
+- **Anillos azules** alrededor del pane que necesita atención
+- **Badges** en el sidebar para tabs no leídos
+- **Notificaciones nativas** de macOS
+
+Las notificaciones se disparan automáticamente por secuencias de terminal estándar (OSC 9/99/777) o mediante el CLI:
+
+```bash
+cmux notify --title "Build terminado" --body "Todo OK, 0 errores"
+```
+
+Con `⌘+⇧+U` saltás directamente al último item no leído.
+
+## El CLI: el superpoder de cmux
+
+El CLI de cmux es lo que lo convierte en una herramienta realmente poderosa. Algunos comandos útiles:
+
+```bash
+# Listar workspaces
+cmux list-workspaces
+
+# Crear un nuevo workspace
+cmux new-workspace
+
+# Dividir el pane actual
+cmux new-split --direction right
+cmux new-split --direction down
+
+# Enviar texto a un pane
+cmux send "npm run dev"
+cmux send-key Return
+
+# Abrir browser en un pane nuevo
+cmux new-pane --type browser --url http://localhost:3000
+
+# Mostrar progreso en el sidebar
+cmux set-status build "Running..." --icon hammer
+cmux set-progress 75
+
+# Disparar notificación
+cmux notify --title "Deploy" --body "Completado exitosamente"
+```
+
+Esto permite crear scripts que configuren tu entorno completo en un solo comando. Por ejemplo, un script que abra un workspace para cada proyecto, lance los servidores de desarrollo y configure los splits como a vos te gustan.
+
+## Integración con agentes de IA
+
+cmux fue pensado desde el día uno para trabajar con agentes de IA. Es compatible con:
+
+- **Claude Code**
+- **Codex**
+- **OpenCode**
+- **Gemini CLI**
+- **Kiro**
+- **Aider**
+- **Goose**
+- **Amp**
+
+La integración va más allá de simplemente "correr el agente en una terminal". Gracias al CLI y al socket API, los agentes pueden:
+
+1. **Crear sub-agentes** en paneles separados con `new-split`
+2. **Enviar instrucciones** a paneles específicos con `send`
+3. **Leer la salida** de otros paneles con `read-screen`
+4. **Abrir browsers** y navegar páginas para verificar cambios
+5. **Notificarte** cuando necesiten tu atención
+
+Esto habilita flujos de trabajo donde un agente principal coordina múltiples agentes en paralelo, cada uno en su propio panel, trabajando en distintas partes de tu proyecto.
+
+## Configuración: reutilizá tu config de Ghostty
+
+Si ya usás Ghostty, cmux lee directamente tu archivo de configuración en `~/.config/ghostty/config`. Tus fuentes, temas, colores y preferencias se aplican automáticamente. No hay que configurar nada extra para la parte de terminal.
+
+Las preferencias específicas de cmux (tema, automatización, etc.) se configuran desde el menú Settings (`⌘+,`).
+
+## Atajos de teclado más útiles
+
+| Acción | Atajo |
+|---|---|
+| Nuevo workspace | `⌘+N` |
+| Ir a workspace 1-8 | `⌘+1` a `⌘+8` |
+| Cerrar workspace | `⌘+⇧+W` |
+| Nueva surface | `⌘+T` |
+| Split derecha | `⌘+D` |
+| Split abajo | `⌘+⇧+D` |
+| Browser derecha | `⌥+⌘+D` |
+| Navegar entre panes | `⌥+⌘+flechas` |
+| Panel de notificaciones | `⌘+⇧+I` |
+| Ir a último no leído | `⌘+⇧+U` |
+| Buscar | `⌘+F` |
+| Settings | `⌘+,` |
+
+## Open source y gratuito
+
+cmux es **completamente gratuito** y de código abierto bajo la licencia AGPL-3.0. El código está disponible en [GitHub](https://github.com/manaflow-ai/cmux) y tiene una comunidad activa en Discord.
+
+## ¿Tmux vs cmux?
+
+Si venís de tmux, la transición es natural pero el enfoque es diferente. Tmux es un multiplexor de terminal que corre dentro de tu terminal existente. cmux es una **aplicación nativa completa** con GPU rendering, un sidebar visual, notificaciones de macOS, y un browser integrado. No compiten directamente: tmux sigue siendo excelente para servidores remotos y sesiones SSH, mientras que cmux brilla en tu máquina local cuando trabajás con múltiples proyectos y agentes de IA.
+
+## Conclusión
+
+Si trabajás con agentes de IA a diario y manejás múltiples proyectos, cmux es probablemente la mejor terminal que podés usar en macOS hoy. La combinación de tabs verticales informativos, el sistema de notificaciones, el browser integrado y el CLI scriptable lo hacen una herramienta que realmente cambia tu flujo de trabajo.
+
+Lo mejor es que al ser gratuito y open source, no hay excusa para no probarlo. Instalalo con `brew install --cask cmux` y en cinco minutos vas a entender por qué la terminal necesitaba evolucionar.
