@@ -17,6 +17,7 @@
     "@mdx-js/react": "^3.1.0",
     "@next/mdx": "^16.1.6",
     "@types/mdx": "^2.0.13",
+    "@vercel/analytics": "^2.0.1",
     "cheerio": "^1.1.2",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.562.0",
