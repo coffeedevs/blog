@@ -166,13 +166,18 @@
 }
 
 .m-recommended-articles {
-  margin: 0 -20px;
+  margin: 0;
 }
 
-@media only screen and (min-width: 1024px) {
+@media only screen and (min-width: 48rem) {
   .m-recommended-articles {
-    padding: 0 40px;
-    margin: 0 -30px;
+    padding: 0 10px;
+  }
+}
+
+@media only screen and (min-width: 80rem) {
+  .m-recommended-articles {
+    padding: 0 20px;
   }
 }
 

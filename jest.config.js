@@ -16,6 +16,7 @@ const customJestConfig = {
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
+  testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
   transformIgnorePatterns: [
     'node_modules/(?!(@mdx-js|rehype-prism-plus|unist|unified|bail|is-plain-obj|trough|vfile|vfile-message|micromark|decode-named-character-reference|character-entities)/)',
   ],
