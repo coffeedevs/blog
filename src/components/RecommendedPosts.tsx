@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { Star } from 'lucide-react';
 import { getAllPosts, transformImagePath } from '@/lib/getPostData';
 
 interface RecommendedPostsProps {
@@ -74,7 +75,7 @@ export default async function RecommendedPosts({ currentSlug }: RecommendedPosts
 
                     {post.featured && (
                       <Link href={`/${post.slug}/`} className="m-article-card__featured js-tooltip" data-tippy-content="Destacado" aria-label="Destacado">
-                        <span className="icon-star" aria-hidden="true"></span>
+                        <Star size={14} aria-hidden="true" />
                       </Link>
                     )}
                   </div>

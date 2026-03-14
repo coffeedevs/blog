@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Article {
   id: string;
@@ -99,7 +100,7 @@ export default function FeaturedSlider({ articles }: FeaturedSliderProps) {
                 </div>
 
                 <div className="m-featured-article__ribbon">
-                  <span className="icon-star"></span>
+                  <Star size={14} aria-hidden="true" />
                   <span>Destacado</span>
                 </div>
 
@@ -126,14 +127,14 @@ export default function FeaturedSlider({ articles }: FeaturedSliderProps) {
             className="m-icon-button in-featured-articles glide-prev js-featured-slider-previous"
             aria-label="Anterior"
           >
-            <span className="icon-arrow-left" aria-hidden="true"></span>
+            <ChevronLeft size={20} aria-hidden="true" />
           </button>
           <button
             onClick={goToNext}
             className="m-icon-button in-featured-articles glide-next js-featured-slider-next"
             aria-label="Siguiente"
           >
-            <span className="icon-arrow-right" aria-hidden="true"></span>
+            <ChevronRight size={20} aria-hidden="true" />
           </button>
         </div>
       )}

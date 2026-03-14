@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Star } from "lucide-react";
 
 interface Article {
   id: string;
@@ -63,7 +64,7 @@ export default function ArticleGrid({ articles }: ArticleGridProps) {
             
             {article.featured && (
               <Link href={`/${article.slug}/`} className="m-article-card__featured js-tooltip" data-tippy-content="Destacado" aria-label="Destacado">
-                <span className="icon-star" aria-hidden="true"></span>
+                <Star size={14} aria-hidden="true" />
               </Link>
             )}
           </div>

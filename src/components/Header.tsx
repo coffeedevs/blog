@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Menu, Search, X, Moon, Sun } from "lucide-react";
 
 interface HeaderProps {
   searchQuery?: string;
@@ -62,7 +63,7 @@ export default function Header({ searchQuery = "" }: HeaderProps) {
             aria-label="Abrir menú"
             onClick={() => setIsMenuOpen(true)}
           >
-            <span className="icon-menu" aria-hidden="true"></span>
+            <Menu size={20} aria-hidden="true" />
           </button>
           <Link href="/" className="m-logo in-mobile-topbar">
             <Image src="/content/images/2018/06/logo.png" alt="Café de por medio" width={100} height={50} />
@@ -73,7 +74,7 @@ export default function Header({ searchQuery = "" }: HeaderProps) {
             aria-label="Abrir búsqueda"
             onClick={() => setIsSearchOpen(true)}
           >
-            <span className="icon-search" aria-hidden="true"></span>
+            <Search size={20} aria-hidden="true" />
           </button>
         </div>
 
@@ -84,7 +85,7 @@ export default function Header({ searchQuery = "" }: HeaderProps) {
             aria-label="Cerrar menú"
             onClick={() => setIsMenuOpen(false)}
           >
-            <span className="icon-close"></span>
+            <X size={20} aria-hidden="true" />
           </button>
 
           <div className="m-menu__main">
@@ -119,7 +120,7 @@ export default function Header({ searchQuery = "" }: HeaderProps) {
                     aria-label="Abrir búsqueda"
                     onClick={() => setIsSearchOpen(true)}
                   >
-                    <span className="icon-search" aria-hidden="true"></span>
+                    <Search size={20} aria-hidden="true" />
                   </button>
                   <div className="m-toggle-darkmode js-tooltip" data-tippy-content="Alternar modo oscuro" tabIndex={0}>
                     <label htmlFor="toggle-darkmode" className="sr-only">
@@ -127,8 +128,8 @@ export default function Header({ searchQuery = "" }: HeaderProps) {
                     </label>
                     <input id="toggle-darkmode" type="checkbox" className="js-toggle-darkmode" />
                     <div>
-                      <span className="icon-moon moon" aria-hidden="true"></span>
-                      <span className="icon-sunny sun" aria-hidden="true"></span>
+                      <Moon size={16} className="moon" aria-hidden="true" />
+                      <Sun size={16} className="sun" aria-hidden="true" />
                     </div>
                   </div>
                 </div>
@@ -146,12 +147,12 @@ export default function Header({ searchQuery = "" }: HeaderProps) {
             aria-label="Cerrar búsqueda"
             onClick={() => setIsSearchOpen(false)}
           >
-            <span className="icon-close" aria-hidden="true"></span>
+            <X size={20} aria-hidden="true" />
           </button>
           <div className="m-search__content">
             <form className="m-search__form" action="/search" method="get" onSubmit={() => setIsSearchOpen(false)}>
               <fieldset>
-                <span className="m-search-icon icon-search" aria-hidden="true"></span>
+                <Search size={20} className="m-search-icon" aria-hidden="true" />
                 <input
                   ref={searchInputRef}
                   className="m-input in-search js-input-search"
